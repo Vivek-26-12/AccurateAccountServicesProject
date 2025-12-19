@@ -2,6 +2,7 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+require("dotenv").config(); // Load environment variables
 
 const authRoutes = require("./authRoutes");
 const clientRoutes = require("./clientRoutes");
@@ -26,11 +27,11 @@ app.use(express.json());
 app.use(cors());
 
 const db = mysql.createConnection({
-    host: process.env.DB_HOST || "mysql-3f0678b1-vivekdhanwani26122004-19b3.b.aivencloud.com",
-    port: process.env.DB_PORT || 20875,
-    user: process.env.DB_USER || "avnadmin",
-    password: process.env.DB_PASSWORD || "AVNS_B095vviE7FXOIMNUQq1",
-    database: process.env.DB_NAME || "defaultdb",
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     ssl: {
         rejectUnauthorized: false,
     },
@@ -64,7 +65,7 @@ app.use("/", taskRoutes(db));
 app.use("/guest-messages", guestMessageRoutes(db)); // 👈 mount route
 app.use('/announcements', announcementsRouter(db));
 app.use("/client-relations", clientRelationRoutes(db));
-app.use("/delete", deleteUserClientRoutes(db)); 
+app.use("/delete", deleteUserClientRoutes(db));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
