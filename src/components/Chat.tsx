@@ -42,6 +42,14 @@ interface Announcement {
   profile_pic?: string | null;
 }
 
+interface GroupMember {
+  user_id: string | number;
+  first_name: string;
+  last_name: string;
+  profile_pic?: string | null;
+  role: string;
+}
+
 const Chat = () => {
   const { currentUser } = useUserContext();
   const {
@@ -57,6 +65,7 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isGroupFormOpen, setIsGroupFormOpen] = useState(false);
@@ -166,12 +175,29 @@ const Chat = () => {
     }
   };
 
+  const fetchGroupMembers = async (groupId: string | number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/chats/groups/${groupId}/members`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      setGroupMembers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching group members:", err);
+      // Don't show error to user, just empty list
+      setGroupMembers([]);
+    }
+  };
+
   useEffect(() => {
     if (!currentUser) return;
     if (selectedChat === 'announcements') {
       fetchAnnouncements();
-    } else if (selectedUserChat || selectedGroupChat) {
+    } else if (selectedUserChat) {
       fetchMessages();
+      setGroupMembers([]);
+    } else if (selectedGroupChat) {
+      fetchMessages();
+      fetchGroupMembers(selectedGroupChat);
     }
   }, [selectedChat, selectedUserChat, selectedGroupChat, currentUser]);
 
@@ -867,9 +893,9 @@ const Chat = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <h2 className="font-bold text-gray-800 truncate">{getChatName()}</h2>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-gray-500 whitespace-normal break-words">
                         {selectedGroupChat
-                          ? 'Group chat'
+                          ? groupMembers.map(m => `${m.first_name} ${m.last_name}`).join(', ')
                           : users.find(u => u.user_id === selectedUserChat)?.role === 'admin'
                             ? 'Admin'
                             : 'Employee'}
