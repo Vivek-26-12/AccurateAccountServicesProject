@@ -1,0 +1,40 @@
+import { User } from '../types';
+
+export const initialUsers: User[] = [
+  {
+    id: '1',
+    name: 'Ravi Patel',
+    email: 'ravi.patel@example.com',
+    phone: '+91 98765 43210',
+    role: 'Admin',
+    status: 'Active',
+    department: 'IT',
+    adminLevel: 'Senior',
+    createdAt: '2024-03-10',
+  },
+  {
+    id: '2',
+    name: 'Neha Sharma',
+    email: 'neha.sharma@example.com',
+    phone: '+91 98765 43211',
+    role: 'Employee',
+    status: 'Active',
+    designation: 'Software Engineer',
+    employeeId: 'EMP001',
+    joiningDate: '2024-01-15',
+    createdAt: '2024-03-10',
+  },
+  {
+    id: '3',
+    name: 'Amit Verma',
+    email: 'amit.verma@example.com',
+    phone: '+91 98765 43212',
+    role: 'Client',
+    status: 'Active',
+    companyName: 'Tech Solutions Pvt. Ltd.',
+    gstin: 'GSTIN987654',
+    pan: 'PANA12345B',
+    address: '456 Corporate Avenue, Mumbai',
+    createdAt: '2024-03-10',
+  },
+];
