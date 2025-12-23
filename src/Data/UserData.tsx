@@ -1,18 +1,19 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthData";
+import API_BASE_URL from '../config';
 
 // Define the shape of user data
 type User = {
-    user_id: number;
-    auth_id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    role: "admin" | "employee" | "client";
-    created_at: string;
-    updated_at: string;
-    profile_pic: string | null;
+  user_id: number;
+  auth_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: "admin" | "employee" | "client";
+  created_at: string;
+  updated_at: string;
+  profile_pic: string | null;
 };
 
 // Define the shape of context data
@@ -43,9 +44,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchCurrentUser = async () => {
     if (!authUser?.auth_id) return;
-    
+
     try {
-      const response = await axios.get(`http://localhost:3000/users/auth/${authUser.auth_id}`);
+      const response = await axios.get(`${API_BASE_URL}/users/auth/${authUser.auth_id}`);
       const userData = response.data;
       // console.log("Fetched current user:", userData);
       setCurrentUser(userData);
@@ -57,15 +58,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/users");
+      const response = await axios.get(`${API_BASE_URL}/users`);
       const usersData = response.data;
       // console.log("Fetched all users:", usersData);
-      
+
       // Filter out the current user if needed
-      const otherUsers = authUser?.auth_id 
+      const otherUsers = authUser?.auth_id
         ? usersData.filter((u: User) => u.auth_id !== authUser.auth_id)
         : usersData;
-      
+
       setUsers(otherUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -76,7 +77,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initializeUserData = async () => {
       await fetchCurrentUser();
-      
+
       // Only fetch all users if admin or employee
       if (authUser?.role === 'admin' || authUser?.role === 'employee') {
         await fetchUsers();
@@ -87,8 +88,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [authUser]);
 
   return (
-    <UserContext.Provider value={{ 
-      currentUser, 
+    <UserContext.Provider value={{
+      currentUser,
       users,
       fetchUsers,
       fetchCurrentUser

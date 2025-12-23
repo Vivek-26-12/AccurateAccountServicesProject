@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useUserContext } from '../Data/UserData';
 import { useUnseenMessages } from '../Data/UnseenMessagesContext';
-// import { useUnseenMessages } from '../context/UnseenMessagesContext';
+import API_BASE_URL from '../config';
 
 interface User {
   user_id: string | number;
@@ -103,7 +103,7 @@ const Chat = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:3000/users");
+      const response = await fetch("${API_BASE_URL}/users");
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       const usersData = Array.isArray(data) ? data : [];
@@ -117,7 +117,7 @@ const Chat = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/chats/groups?user_id=${currentUser?.user_id}`);
+      const response = await fetch(`${API_BASE_URL}/chats/groups?user_id=${currentUser?.user_id}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
@@ -133,7 +133,7 @@ const Chat = () => {
 
     setIsLoading(true);
     try {
-      let url = `http://localhost:3000/chats/messages?user_id=${currentUser.user_id}`;
+      let url = `${API_BASE_URL}/chats/messages?user_id=${currentUser.user_id}`;
 
       if (selectedGroupChat) {
         url += `&group_id=${selectedGroupChat}`;
@@ -177,7 +177,7 @@ const Chat = () => {
 
   const fetchGroupMembers = async (groupId: string | number) => {
     try {
-      const response = await fetch(`http://localhost:3000/chats/groups/${groupId}/members`);
+      const response = await fetch(`${API_BASE_URL}/chats/groups/${groupId}/members`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setGroupMembers(Array.isArray(data) ? data : []);
@@ -294,7 +294,7 @@ const Chat = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/announcements');
+      const response = await fetch('${API_BASE_URL}/announcements');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
 
@@ -305,7 +305,7 @@ const Chat = () => {
           }
 
           try {
-            const userResponse = await fetch(`http://localhost:3000/users/${announcement.auth_id}`);
+            const userResponse = await fetch(`${API_BASE_URL}/users/${announcement.auth_id}`);
             if (!userResponse.ok) return announcement;
 
             const userData = await userResponse.json();
@@ -347,7 +347,7 @@ const Chat = () => {
     if (!announcementTitle.trim() || !announcementMessage.trim() || !currentUser) return;
 
     try {
-      const response = await axios.post('http://localhost:3000/announcements', {
+      const response = await axios.post('${API_BASE_URL}/announcements', {
         auth_id: currentUser.auth_id,
         title: announcementTitle,
         message: announcementMessage
@@ -375,7 +375,7 @@ const Chat = () => {
     if (!groupName.trim() || selectedMembers.length === 0 || !currentUser) return;
 
     try {
-      const response = await axios.post('http://localhost:3000/chats/groups', {
+      const response = await axios.post('${API_BASE_URL}/chats/groups', {
         group_name: groupName,
         creator_id: currentUser.user_id,
         members: [currentUser.user_id, ...selectedMembers]
@@ -399,7 +399,7 @@ const Chat = () => {
 
     try {
       if (selectedGroupChat) {
-        const response = await axios.post('http://localhost:3000/chats/messages', {
+        const response = await axios.post('${API_BASE_URL}/chats/messages', {
           sender_id: currentUser.user_id,
           group_id: selectedGroupChat,
           message: newMessage
@@ -423,7 +423,7 @@ const Chat = () => {
         }, 100);
       }
       else if (selectedUserChat) {
-        const response = await axios.post('http://localhost:3000/chats/messages', {
+        const response = await axios.post('${API_BASE_URL}/chats/messages', {
           sender_id: currentUser.user_id,
           receiver_id: selectedUserChat,
           message: newMessage

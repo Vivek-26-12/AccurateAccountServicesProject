@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../Data/AuthData'; // Updated import
+import API_BASE_URL from '../config';
 import { useNavigate } from 'react-router-dom';
 import { X, Lock, User, Eye, EyeOff } from 'lucide-react';
 
@@ -15,24 +16,24 @@ export default function LoginPopup({ onClose }) {
   const handleLogin = async () => {
     setIsLoading(true);
     setError('');
-  
+
     try {
-      const response = await fetch("http://localhost:3000/auth", {
+      const response = await fetch(`${API_BASE_URL}/auth`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to authenticate");
-  
+
       // Store user data in Auth Context
       login(data.user);
-  
+
       // Store role and authId in localStorage
       localStorage.setItem("userRole", data.user.role);
       localStorage.setItem("authId", data.user.authId); // Ensure authId exists in response
-  
+
       let redirectPath = "/";
       switch (data.user.role) {
         case "admin":
@@ -47,7 +48,7 @@ export default function LoginPopup({ onClose }) {
         default:
           throw new Error("Unauthorized role");
       }
-  
+
       onClose();
       navigate(redirectPath);
     } catch (err) {
@@ -56,7 +57,7 @@ export default function LoginPopup({ onClose }) {
       setIsLoading(false);
     }
   };
-  
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
@@ -113,7 +114,7 @@ export default function LoginPopup({ onClose }) {
                   placeholder="••••••••"
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <button 
+                <button
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
@@ -125,11 +126,10 @@ export default function LoginPopup({ onClose }) {
             <button
               onClick={handleLogin}
               disabled={isLoading || !username || !password}
-              className={`w-full py-3 px-4 rounded-lg font-medium text-white flex items-center justify-center ${
-                isLoading || !username || !password 
-                  ? 'bg-blue-400 cursor-not-allowed' 
+              className={`w-full py-3 px-4 rounded-lg font-medium text-white flex items-center justify-center ${isLoading || !username || !password
+                  ? 'bg-blue-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
-              } transition-colors`}
+                } transition-colors`}
             >
               {isLoading ? 'Loging in...' : 'Log In'}
             </button>
