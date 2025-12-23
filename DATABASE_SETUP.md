@@ -1,4 +1,4 @@
-# Database Setup for Render
+    # Database Setup for Render
 
 You are currently seeing an error like `connect ECONNREFUSED 127.0.0.1:3306` in your Render logs.
 This happens because your Render application is trying to connect to a "localhost" database, but there is no database running inside the Render web service container.
