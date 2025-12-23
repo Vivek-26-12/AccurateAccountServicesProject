@@ -9,8 +9,7 @@ const db = mysql.createConnection({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     ssl: {
-        rejectUnauthorized: false, // Only for development
-        ca: fs.readFileSync("aiven-ca.pem"), // Use Aiven's SSL certificate
+        rejectUnauthorized: false,
     },
 });
 
