@@ -572,12 +572,12 @@ const Chat = () => {
     if (!currentUser) return;
 
     const fetchInitialData = async () => {
-      await fetchUsers();
-      await fetchGroups();
-      await refreshUnseenMessages();
-      if (selectedChat === 'announcements') {
-        await fetchAnnouncements();
-      }
+      await Promise.all([
+        fetchUsers(),
+        fetchGroups(),
+        refreshUnseenMessages(),
+        fetchAnnouncements()
+      ]);
     };
 
     fetchInitialData();
@@ -624,11 +624,6 @@ const Chat = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <h2 className="text-xl font-bold text-gray-800">Workplace Chat</h2>
-                      <p className="text-sm text-gray-500">Connected as {currentUser?.first_name}</p>
-                      {/* Debug Info */}
-                      <p className="text-xs text-red-500">
-                        DEBUG: Users: {users.length}, API: {API_BASE_URL}, Err: {error ?? 'None'}
-                      </p>
                     </div>
                     {isMobileView && (
                       <button
@@ -696,22 +691,24 @@ const Chat = () => {
                   <div className="p-2">
                     <div className="flex justify-between items-center px-3 py-2">
                       <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Groups</h3>
-                      <button
-                        onClick={() => {
-                          setIsGroupFormOpen(true);
-                          setIsAnnouncementFormOpen(false);
-                          setSelectedChat(null);
-                          setSelectedGroupChat(null);
-                          setSelectedUserChat(null);
-                          if (isMobileView) setShowSidebar(false);
-                        }}
-                        className="text-gray-500 hover:text-blue-600 transition-colors"
-                        title="Create New Group"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      {currentUser?.role !== 'employee' && (
+                        <button
+                          onClick={() => {
+                            setIsGroupFormOpen(true);
+                            setIsAnnouncementFormOpen(false);
+                            setSelectedChat(null);
+                            setSelectedGroupChat(null);
+                            setSelectedUserChat(null);
+                            if (isMobileView) setShowSidebar(false);
+                          }}
+                          className="text-gray-500 hover:text-blue-600 transition-colors"
+                          title="Create New Group"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                     {groups.filter(g => !g.is_announcement).map(group => (
                       <div
