@@ -387,6 +387,7 @@ const TaskDashboard = () => {
                 task={task}
                 onStatusChange={handleStatusChange}
                 onDelete={handleDeleteTask}
+                userRole={currentUser?.role}
               />
             ))}
           </div>

@@ -13,7 +13,7 @@ import {
   FiUsers
 } from 'react-icons/fi';
 
-export const TaskCard = ({ task, onStatusChange, onDelete }) => {
+export const TaskCard = ({ task, onStatusChange, onDelete, userRole }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const statusColors = {
@@ -83,13 +83,15 @@ export const TaskCard = ({ task, onStatusChange, onDelete }) => {
           <h3 className="font-semibold text-gray-800 text-xl sm:text-2xl line-clamp-2 pr-2">
             {task.task_name}
           </h3>
-          <button
-            onClick={confirmDelete}
-            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-gray-100"
-            aria-label="Delete task"
-          >
-            <FiTrash2 size={18} />
-          </button>
+          {userRole !== 'employee' && (
+            <button
+              onClick={confirmDelete}
+              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-gray-100"
+              aria-label="Delete task"
+            >
+              <FiTrash2 size={18} />
+            </button>
+          )}
         </div>
 
         {/* Status and Priority badges */}
@@ -141,8 +143,8 @@ export const TaskCard = ({ task, onStatusChange, onDelete }) => {
                 key={status}
                 onClick={() => onStatusChange(task.task_id, status)}
                 className={`text-xs px-4 py-2 rounded-lg flex-1 text-center transition-all duration-200 ease-in-out transform ${task.status === status
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
               >
                 {status}
