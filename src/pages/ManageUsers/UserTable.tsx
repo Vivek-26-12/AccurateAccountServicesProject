@@ -5,6 +5,7 @@ import { ViewClientModal } from './ViewClientModal';
 import { UserEditForm } from './UserEditForm';
 import { useData } from '../../context/DataContext';
 import { ClientEditForm } from './ClientEditForm';
+import API_BASE_URL from '../../config';
 
 interface User {
   user_id: number;
@@ -87,8 +88,8 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
       try {
         setLoading(true);
         let url = activeTab === 'users'
-          ? 'http://localhost:3000/users'
-          : 'http://localhost:3000/clients';
+          ? `${API_BASE_URL}/users`
+          : `${API_BASE_URL}/clients`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -144,7 +145,7 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
 
   const updateUserInDatabase = async (updatedUser: User): Promise<void> => {
     try {
-      const response = await fetch('http://localhost:3000/update/update-user', {
+      const response = await fetch(`${API_BASE_URL}/update/update-user`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +170,7 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
   const updateClientInDatabase = async (updatedClient: Client): Promise<void> => {
     try {
       // console.log('Sending client update:', updatedClient);
-      const response = await fetch('http://localhost:3000/update/update-client', {
+      const response = await fetch(`${API_BASE_URL}/update/update-client`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -215,7 +216,7 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/delete/${type}/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/delete/${type}/${id}`, {
         method: 'DELETE'
       });
 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { NewUserForm, User } from '../Data';
+import API_BASE_URL from '../config';
 import { Header } from './ManageUsers/Header';
 import { UserTable } from './ManageUsers/UserTable';
 // import { AddUserModal } from './ManageUsers/AddUserModal';
@@ -54,7 +55,7 @@ function ManageUsersMain() {
   // Fetch groups when tab is Group
   React.useEffect(() => {
     if (activeTab === 'Group') {
-      fetch('http://localhost:3000/chats/groups/all')
+      fetch(`${API_BASE_URL}/chats/groups/all`)
         .then(res => res.json())
         .then(data => setGroups(data))
         .catch(err => console.error('Error fetching groups:', err));
@@ -192,7 +193,7 @@ function ManageUsersMain() {
             if (selectedGroup) {
               // UPDATE
               console.log("Updating group...");
-              fetch(`http://localhost:3000/chats/groups/${selectedGroup.group_id}`, {
+              fetch(`${API_BASE_URL}/chats/groups/${selectedGroup.group_id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -201,7 +202,7 @@ function ManageUsersMain() {
                 })
               })
                 .then(() => {
-                  fetch('http://localhost:3000/chats/groups/all').then(r => r.json()).then(setGroups);
+                  fetch(`${API_BASE_URL}/chats/groups/all`).then(r => r.json()).then(setGroups);
                   setIsModalOpen(false);
                 })
                 .catch(err => console.error("Error updating group:", err));
@@ -214,7 +215,7 @@ function ManageUsersMain() {
               };
               console.log("Creating group with payload:", payload);
 
-              fetch('http://localhost:3000/chats/groups', {
+              fetch(`${API_BASE_URL}/chats/groups`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -226,7 +227,7 @@ function ManageUsersMain() {
                   return JSON.parse(responseText);
                 })
                 .then(() => {
-                  fetch('http://localhost:3000/chats/groups/all').then(r => r.json()).then(setGroups);
+                  fetch(`${API_BASE_URL}/chats/groups/all`).then(r => r.json()).then(setGroups);
                   setIsModalOpen(false);
                 })
                 .catch(err => {

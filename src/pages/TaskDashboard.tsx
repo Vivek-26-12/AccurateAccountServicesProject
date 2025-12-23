@@ -3,6 +3,7 @@ import { FiSearch, FiPlus, FiFilter, FiCalendar, FiUser, FiCheckCircle, FiCircle
 import { TaskCard } from './TasksPage/TaskCard';
 import { TaskForm } from './TasksPage/TaskForm';
 import { useUserContext } from '../Data/UserData';
+import API_BASE_URL from '../config';
 
 const TaskDashboard = () => {
   interface Task {
@@ -27,7 +28,7 @@ const TaskDashboard = () => {
 
   useEffect(() => {
     if (currentUser?.role === 'employee') {
-      fetch(`http://localhost:3000/chats/groups?user_id=${currentUser.user_id}`)
+      fetch(`${API_BASE_URL}/chats/groups?user_id=${currentUser.user_id}`)
         .then(res => res.json())
         .then(data => {
           const ids = data.map((g: any) => g.group_id);
@@ -40,7 +41,7 @@ const TaskDashboard = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch('http://localhost:3000/tasks');
+        const response = await fetch(`${API_BASE_URL}/tasks`);
         const data = await response.json();
 
         const transformedTasks = data.map(task => {
@@ -82,7 +83,7 @@ const TaskDashboard = () => {
   const handleDeleteTask = async (taskId) => {
     try {
       // Make DELETE request to the API
-      await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
         method: 'DELETE'
       });
 
@@ -153,7 +154,7 @@ const TaskDashboard = () => {
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ const TaskDashboard = () => {
     try {
       setLoading(true);
 
-      const response = await fetch('http://localhost:3000/tasks', {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,7 +200,7 @@ const TaskDashboard = () => {
       const createdTask = await response.json();
 
       // Refetch all tasks to get the updated list
-      const tasksResponse = await fetch('http://localhost:3000/tasks');
+      const tasksResponse = await fetch(`${API_BASE_URL}/tasks`);
       const data = await tasksResponse.json();
 
       const transformedTasks = data.map(task => {

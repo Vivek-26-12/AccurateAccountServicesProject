@@ -1,4 +1,5 @@
 import axios from "axios";
+import API_BASE_URL from "../config";
 
 // Update your interfaces to match the database schema
 export interface Folder {
@@ -49,9 +50,8 @@ export const fetchClients = async (userId: number): Promise<Client[]> => {
   try {
     // Fetch clients data and relations in parallel
     const [clientsResponse, relationsResponse] = await Promise.all([
-      axios.get("http://localhost:3000/clientDataRoutes"),
-      axios.get(`http://localhost:3000/client-relations/${userId}
-}`)
+      axios.get(`${API_BASE_URL}/clientDataRoutes`),
+      axios.get(`${API_BASE_URL}/client-relations/${userId}`)
     ]);
 
     // Create a map of favorite client IDs for quick lookup
@@ -87,7 +87,7 @@ export const fetchClients = async (userId: number): Promise<Client[]> => {
         // Fetch OtherDocuments for each client
         let otherDocuments: OtherDocument[] = [];
         try {
-          const otherDocsRes = await axios.get(`http://localhost:3000/other/getByClient/${client_id}`);
+          const otherDocsRes = await axios.get(`${API_BASE_URL}/other/getByClient/${client_id}`);
           otherDocuments = otherDocsRes.data.documents.map((doc: any): OtherDocument => ({
             doc_id: doc.doc_id,
             doc_name: doc.doc_name || 'Untitled Document',

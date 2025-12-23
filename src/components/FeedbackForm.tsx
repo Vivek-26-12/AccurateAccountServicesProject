@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { X } from "lucide-react";
 import axios from "axios";
 import { ClientContext } from "../Data/ClientData";
+import API_BASE_URL from '../config';
 //import { ClientContext } from "@/context/ClientData"; // Adjust path if different
 
 export default function FeedbackForm({ onClose }) {
@@ -20,7 +21,7 @@ export default function FeedbackForm({ onClose }) {
     setLoading(true);
     setStatus("");
     try {
-      await axios.post("http://localhost:3000/feedback/submit", {
+      await axios.post(`${API_BASE_URL}/feedback/submit`, {
         client_id: client.client_id,
         message,
       });

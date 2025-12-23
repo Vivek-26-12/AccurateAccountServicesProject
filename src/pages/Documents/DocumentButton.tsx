@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { FileText, Upload, Pencil, Download, Loader2, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { uploadPDFToCloudinary, uploadThumbnailToCloudinary } from '../../cloudinaryUploads';
+import API_BASE_URL from '../../config';
 
 interface DocumentButtonProps {
   name: string;
@@ -55,8 +56,8 @@ export function DocumentButton({
 
       const uploadEndpoint =
         documentType === 'important'
-          ? 'http://localhost:3000/uploadimportant'
-          : 'http://localhost:3000/other/update';
+          ? `${API_BASE_URL}/uploadimportant`
+          : `${API_BASE_URL}/other/update`;
 
       const requestData = documentType === 'important'
         ? { doc_id, fileUrl: uploadedUrl }
@@ -119,17 +120,15 @@ export function DocumentButton({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         disabled={isUploading}
-        className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${
-          hasData
+        className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${hasData
             ? 'bg-green-50 border border-green-200 hover:bg-green-100 hover:shadow-sm'
             : 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 hover:from-red-100 hover:to-orange-100 hover:shadow-sm'
-        } ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          } ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}`}
       >
         <div className="flex items-center flex-grow">
           <div
-            className={`p-2 rounded-lg mr-3 ${
-              hasData ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-            }`}
+            className={`p-2 rounded-lg mr-3 ${hasData ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+              }`}
           >
             {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
           </div>

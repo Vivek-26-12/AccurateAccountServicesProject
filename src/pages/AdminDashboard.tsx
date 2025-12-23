@@ -5,7 +5,31 @@ import { BsGraphUp } from 'react-icons/bs';
 import axios from 'axios';
 import { useUserContext } from '../Data/UserData';
 import ClientFeedbackPopup from '../components/ClientFeedbackPopup';
+import API_BASE_URL from '../config';
 import MessagesPopup from '../components/MessagesPopup';
+
+interface Task {
+  id: number;
+  title: string;
+  project: string;
+  priority: string;
+  completed: boolean;
+  dueDate: string;
+}
+
+interface Announcement {
+  announcement_id: number;
+  title: string;
+  message: string;
+  created_at: string;
+}
+
+interface Stats {
+  pendingReviews: number;
+  guestMessages: number;
+  yesterdayFeedbackCount: number;
+  yesterdayMessageCount: number;
+}
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -13,18 +37,17 @@ function AdminDashboard() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // State for dynamic data
-  const [tasks, setTasks] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [stats, setStats] = useState({
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [stats, setStats] = useState<Stats>({
     pendingReviews: 0,
     guestMessages: 0,
     yesterdayFeedbackCount: 0,
     yesterdayMessageCount: 0
   });
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,26 +55,28 @@ function AdminDashboard() {
         setIsLoading(true);
 
         // Fetch admin tasks
-        const tasksResponse = await axios.get(`http://localhost:3000/tasks/user/${currentUser.user_id}`);
-        setTasks(tasksResponse.data.map(task => ({
-          id: task.task_id,
-          title: task.task_name,
-          project: task.group_name || 'General',
-          priority: task.priority,
-          completed: task.status === 'Completed',
-          dueDate: task.due_date
-        })));
+        if (currentUser?.user_id) {
+          const tasksResponse = await axios.get(`${API_BASE_URL}/tasks/user/${currentUser.user_id}`);
+          setTasks(tasksResponse.data.map((task: any) => ({
+            id: task.task_id,
+            title: task.task_name,
+            project: task.group_name || 'General',
+            priority: task.priority,
+            completed: task.status === 'Completed',
+            dueDate: task.due_date
+          })));
+        }
 
         // Fetch announcements
-        const announcementsResponse = await axios.get('http://localhost:3000/announcements');
+        const announcementsResponse = await axios.get(`${API_BASE_URL}/announcements`);
         setAnnouncements(announcementsResponse.data);
 
-        const feedbackCountResponse = await axios.get('http://localhost:3000/feedback/count');
-        const yesterdayFeedbackResponse = await axios.get('http://localhost:3000/feedback/count/yesterday');
-        // console.log(yesterdayFeedbackResponse);
+        const feedbackCountResponse = await axios.get(`${API_BASE_URL}/feedback/count`);
+        const yesterdayFeedbackResponse = await axios.get(`${API_BASE_URL}/feedback/count/yesterday`);
+
         // Fetch guest message stats
-        const messageCountResponse = await axios.get('http://localhost:3000/guest-messages/count');
-        const yesterdayMessageResponse = await axios.get('http://localhost:3000/guest-messages/count/yesterday');
+        const messageCountResponse = await axios.get(`${API_BASE_URL}/guest-messages/count`);
+        const yesterdayMessageResponse = await axios.get(`${API_BASE_URL}/guest-messages/count/yesterday`);
 
         setStats({
           pendingReviews: feedbackCountResponse.data.count,
@@ -60,8 +85,7 @@ function AdminDashboard() {
           yesterdayMessageCount: yesterdayMessageResponse.data.count
         });
 
-
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
         console.error("Error fetching data:", err);
       } finally {
@@ -74,42 +98,18 @@ function AdminDashboard() {
     }
   }, [currentUser]);
 
-  const toggleTaskCompletion = async (taskId) => {
-    try {
-      const taskToUpdate = tasks.find(task => task.id === taskId);
-      await axios.put(`http://localhost:3000/tasks/${taskId}`, {
-        status: !taskToUpdate.completed ? 'Completed' : 'Pending'
-      });
-
-      setTasks(prev =>
-        prev.map(task =>
-          task.id === taskId ? { ...task, completed: !task.completed } : task
-        )
-      );
-    } catch (err) {
-      console.error("Error updating task:", err);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High': return 'bg-red-100 text-red-800';
       case 'Medium': return 'bg-yellow-100 text-yellow-800';
       case 'Low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const getChangeText = (current, yesterday) => {
-    if (yesterday === 0) {
-      return 'No new items from yesterday';
-    }
-    return `+${yesterday} from yesterday`;
   };
 
   const handleViewAllTasks = () => navigate("/tasks");
@@ -150,11 +150,11 @@ function AdminDashboard() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-5 mb-6">
-        <StatCard
+          <StatCard
             title="Client Feedback"
             value={stats.pendingReviews}
-            change={stats.yesterdayFeedbackCount === 0 
-              ? 'No new feedback' 
+            change={stats.yesterdayFeedbackCount === 0
+              ? 'No new feedback'
               : `+${stats.yesterdayFeedbackCount} from yesterday`}
             icon={<FiMessageSquare className="text-blue-500" size={20} />}
             color="bg-blue-50"
@@ -163,8 +163,8 @@ function AdminDashboard() {
           <StatCard
             title="New Guest Messages"
             value={stats.guestMessages}
-            change={stats.yesterdayMessageCount === 0 
-              ? 'No new messages' 
+            change={stats.yesterdayMessageCount === 0
+              ? 'No new messages'
               : `+${stats.yesterdayMessageCount} from yesterday`}
             icon={<FiMessageCircle className="text-red-500" size={20} />}
             color="bg-red-50"
@@ -260,7 +260,16 @@ function AdminDashboard() {
   );
 }
 
-const StatCard = ({ title, value, change, icon, color, onClick }) => (
+interface StatCardProps {
+  title: string;
+  value: number;
+  change: string;
+  icon: React.ReactNode;
+  color: string;
+  onClick: () => void;
+}
+
+const StatCard = ({ title, value, change, icon, color, onClick }: StatCardProps) => (
   <div
     onClick={onClick}
     className={`${color} rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 hover:shadow-md transition cursor-pointer`}

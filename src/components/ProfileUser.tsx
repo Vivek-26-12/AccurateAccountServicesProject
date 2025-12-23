@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../Data/AuthData';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const defaultProfilePic =
   "https://img.freepik.com/premium-vector/avatar-profile-icon-flat-style-male-user-profile-vector-illustration-isolated-background-man-profile-sign-business-concept_157943-38764.jpg?semt=ais_hybrid";
@@ -52,14 +53,14 @@ const ProfileUser = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (authUser?.auth_id) {
       axios
-        .get(`http://localhost:3000/users/${authUser.auth_id}`)
+        .get(`${API_BASE_URL}/users/${authUser.auth_id}`)
         .then((res) => {
           const data = res.data;
           setUserData({
             name: `${data.first_name} ${data.last_name}` || 'Guest User',
             email: data.email || 'guest@example.com',
             profileImage: defaultProfilePic,
-            phone : data.phone,
+            phone: data.phone,
             joinDate: new Date(data.created_at),
             lastUpdate: new Date(data.updated_at),
             userId: data.user_id,

@@ -1,24 +1,53 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiAlertCircle, FiBell, FiCalendar, FiZap } from "react-icons/fi";
 import { useUserContext } from "../Data/UserData";
+import API_BASE_URL from '../config';
+
+interface Task {
+  task_id: number;
+  task_name: string;
+  due_date: string;
+  priority: string;
+}
+
+interface Announcement {
+  announcement_id: number;
+  title: string;
+  message: string;
+  created_at: string;
+}
+
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case "High":
+      return "bg-red-100 text-red-800";
+    case "Medium":
+      return "bg-yellow-100 text-yellow-800";
+    case "Low":
+      return "bg-green-100 text-green-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
 
 export default function EmployeeDashboard() {
-  const [tasks, setTasks] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const { currentUser } = useUserContext();
-  
 
   const loggedInUserId = currentUser?.user_id;
 
   useEffect(() => {
+    if (!loggedInUserId) return;
+
     // Fetch tasks for user
-    axios.get(`http://localhost:3000/tasks/user/${loggedInUserId}`)
+    axios.get(`${API_BASE_URL}/tasks/user/${loggedInUserId}`)
       .then((res) => setTasks(res.data))
       .catch((err) => console.error("Failed to fetch tasks", err));
 
     // Fetch announcements
-    axios.get("http://localhost:3000/announcements")
+    axios.get(`${API_BASE_URL}/announcements`)
       .then((res) => setAnnouncements(res.data))
       .catch((err) => console.error("Failed to fetch announcements", err));
   }, [loggedInUserId]);
@@ -141,16 +170,3 @@ export default function EmployeeDashboard() {
     </div>
   );
 }
-
-const getPriorityColor = (priority) => {
-  switch (priority) {
-    case "High":
-      return "bg-red-100 text-red-800";
-    case "Medium":
-      return "bg-yellow-100 text-yellow-800";
-    case "Low":
-      return "bg-green-100 text-green-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};

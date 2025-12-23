@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../../../config';
 
 interface Employee {
     user_id: number;
@@ -23,7 +24,7 @@ export function GroupForm({ onSubmit, onClose, initialData }: GroupFormProps) {
     useEffect(() => {
         if (initialData?.group_id) {
             // Fetch members for this group
-            fetch(`http://localhost:3000/chats/groups/${initialData.group_id}/members`)
+            fetch(`${API_BASE_URL}/chats/groups/${initialData.group_id}/members`)
                 .then(res => res.json())
                 .then(data => {
                     // data is likely array of users. map to ids.
@@ -35,7 +36,7 @@ export function GroupForm({ onSubmit, onClose, initialData }: GroupFormProps) {
 
     useEffect(() => {
         // Fetch employees
-        fetch('http://localhost:3000/users')
+        fetch(`${API_BASE_URL}/users`)
             .then(res => res.json())
             .then(data => {
                 const emps = data.filter((u: any) => u.role === 'employee' || u.role === 'admin');

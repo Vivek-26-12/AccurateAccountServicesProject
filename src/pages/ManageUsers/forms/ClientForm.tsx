@@ -3,6 +3,7 @@ import { User, Mail, Phone, Shield, Building, CreditCard, Pencil } from 'lucide-
 import { uploadThumbnailToCloudinary } from '../../../cloudinaryUploads';
 import { NewClientForm } from '../type/NewClientForm';
 import { useData } from '../../../context/DataContext';
+import API_BASE_URL from '../../../config';
 
 interface ClientFormProps {
   newClient: NewClientForm;
@@ -114,22 +115,22 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
         if (!contact.contact_name || contact.contact_name.trim().length < 2) {
           contactError.contact_name = 'Contact name is required';
         }
-        
+
         if (!contact.phone) {
           contactError.phone = 'Phone is required';
         } else if (!validatePhone(contact.phone)) {
           contactError.phone = 'Please enter a valid phone number';
         }
-        
+
         if (!contact.email) {
           contactError.email = 'Email is required';
         } else if (!validateEmail(contact.email)) {
           contactError.email = 'Please enter a valid email';
         }
-        
+
         return contactError;
       });
-      
+
       if (contactErrors.some(err => Object.keys(err).length > 0)) {
         errors.contacts = contactErrors;
       }
@@ -195,18 +196,18 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Mark all fields as touched for validation
     const allFields = [
-      'username', 'password', 'company_name', 'contact_person', 'email', 
+      'username', 'password', 'company_name', 'contact_person', 'email',
       'gstin', 'pan_number'
     ];
-    
+
     const touchedState: Record<string, boolean> = {};
     allFields.forEach(field => {
       touchedState[field] = true;
     });
-    
+
     // Mark all contact fields as touched
     if (newClient.contacts) {
       newClient.contacts.forEach((_, index) => {
@@ -215,7 +216,7 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
         touchedState[`contacts[${index}].email`] = true;
       });
     }
-    
+
     setTouched(touchedState);
 
     // Validate form
@@ -226,10 +227,10 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
 
     setIsSubmitting(true);
     setSubmitError(null);
-  
+
     try {
       // console.log('Submitting form data:', newClient);
-      const response = await fetch('http://localhost:3000/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,15 +239,15 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
           role: 'client'
         }),
       });
-  
+
       // console.log('Response status:', response.status);
-  
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Server error response:', errorData);
         throw new Error(errorData.message || `Server error: ${response.status}`);
       }
-  
+
       const result = await response.json();
       // console.log('Success response:', result);
       refreshClients(); // Trigger refresh after successful creation
@@ -292,7 +293,7 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
           />
         </div>
       </div>
-      
+
       {imageError && (
         <div className="text-center text-red-500 text-sm">
           {imageError}
@@ -555,8 +556,8 @@ export default function ClientForm({ newClient, setNewClient, onSubmit, onClose 
           className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
           disabled={uploadingImage || isSubmitting}
         >
-          {uploadingImage ? 'Uploading Image...' : 
-           isSubmitting ? 'Submitting...' : 'Add Client'}
+          {uploadingImage ? 'Uploading Image...' :
+            isSubmitting ? 'Submitting...' : 'Add Client'}
         </button>
       </div>
     </form>

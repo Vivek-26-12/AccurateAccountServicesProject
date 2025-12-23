@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API_BASE_URL from '../config';
 
 const Contact: React.FC = () => {
   const [guestName, setGuestName] = useState("");
@@ -64,7 +65,7 @@ const Contact: React.FC = () => {
     };
 
     try {
-      const res = await fetch("http://localhost:3000/guest-messages", {
+      const res = await fetch(`${API_BASE_URL}/guest-messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,9 +137,8 @@ const Contact: React.FC = () => {
                 type="text"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                className={`mt-2 p-4 bg-white border ${
-                  errors.guestName ? "border-red-500" : "border-gray-300"
-                } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-300`}
+                className={`mt-2 p-4 bg-white border ${errors.guestName ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-300`}
                 placeholder="Enter your name"
               />
               {errors.guestName && <p className="text-red-500 text-sm mt-1">{errors.guestName}</p>}
@@ -150,9 +150,8 @@ const Contact: React.FC = () => {
                 type="email"
                 value={guestEmail}
                 onChange={(e) => setGuestEmail(e.target.value)}
-                className={`mt-2 p-4 bg-white border ${
-                  errors.guestEmail ? "border-red-500" : "border-gray-300"
-                } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-300`}
+                className={`mt-2 p-4 bg-white border ${errors.guestEmail ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-300`}
                 placeholder="Enter your email"
               />
               {errors.guestEmail && <p className="text-red-500 text-sm mt-1">{errors.guestEmail}</p>}
@@ -164,9 +163,8 @@ const Contact: React.FC = () => {
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className={`mt-2 p-4 bg-white border ${
-                  errors.message ? "border-red-500" : "border-gray-300"
-                } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-300`}
+                className={`mt-2 p-4 bg-white border ${errors.message ? "border-red-500" : "border-gray-300"
+                  } rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all duration-300`}
                 placeholder="Write your message..."
               />
               {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
@@ -181,11 +179,10 @@ const Contact: React.FC = () => {
 
             {responseMessage && (
               <p
-                className={`text-center text-sm mt-2 ${
-                  responseMessage.includes("successfully")
+                className={`text-center text-sm mt-2 ${responseMessage.includes("successfully")
                     ? "text-green-600"
                     : "text-red-600"
-                }`}
+                  }`}
               >
                 {responseMessage}
               </p>

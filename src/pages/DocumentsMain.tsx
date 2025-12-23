@@ -8,6 +8,7 @@ import { SearchBar } from './Documents/SearchBar';
 import { FilterTabs } from './Documents/FilterTabs';
 import { fetchClients, Client, Folder } from '../Data/Client';
 import { useUserContext } from '../Data/UserData';
+import API_BASE_URL from '../config';
 
 function DocumentsMain() {
   const { currentUser } = useUserContext();
@@ -46,7 +47,7 @@ function DocumentsMain() {
     if (!currentUser?.user_id) return;
 
     try {
-      const endpoint = 'http://localhost:3000/client-relations/favourite';
+      const endpoint = `${API_BASE_URL}/client-relations/favourite`;
       const method = isFavorite ? 'POST' : 'DELETE';
 
       const response = await fetch(endpoint, {
@@ -124,7 +125,7 @@ function DocumentsMain() {
 
   const fetchRemainingFolders = async (clientId: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/folders/remaining/${clientId}`);
+      const response = await fetch(`${API_BASE_URL}/folders/remaining/${clientId}`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -153,7 +154,7 @@ function DocumentsMain() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/folders/cleanup', {
+      const response = await fetch(`${API_BASE_URL}/folders/cleanup`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +203,7 @@ function DocumentsMain() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/folders/document', {
+      const response = await fetch(`${API_BASE_URL}/folders/document`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -244,7 +245,7 @@ function DocumentsMain() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/folders/document', {
+      const response = await fetch(`${API_BASE_URL}/folders/document`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +286,7 @@ function DocumentsMain() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/folders/document', {
+      const response = await fetch(`${API_BASE_URL}/folders/document`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -341,7 +342,7 @@ function DocumentsMain() {
     }
     setIsCreatingFolder(true);
     try {
-      const response = await fetch('http://localhost:3000/folders/create', {
+      const response = await fetch(`${API_BASE_URL}/folders/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -393,7 +394,7 @@ function DocumentsMain() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/folders/connect', {
+      const response = await fetch(`${API_BASE_URL}/folders/connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -454,7 +455,7 @@ function DocumentsMain() {
         }
       }
 
-      const response = await fetch('http://localhost:3000/other/create', {
+      const response = await fetch(`${API_BASE_URL}/other/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -533,7 +534,7 @@ function DocumentsMain() {
     if (!currentUser?.user_id) return;
 
     try {
-      const response = await fetch('http://localhost:3000/client-relations/recent', {
+      const response = await fetch(`${API_BASE_URL}/client-relations/recent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

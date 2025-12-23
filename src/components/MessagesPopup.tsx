@@ -1,12 +1,24 @@
 // src/components/MessagesPopup.js
 import React, { useEffect, useState } from 'react';
 import { FiX, FiMail } from 'react-icons/fi';
+import API_BASE_URL from '../config';
 
-const MessagesPopup = ({ onClose }) => {
-  const [messages, setMessages] = useState([]);
+interface MessagesPopupProps {
+  onClose: () => void;
+}
+
+interface GuestMessage {
+  guest_name: string;
+  guest_email: string;
+  message: string;
+  created_at: string;
+}
+
+const MessagesPopup = ({ onClose }: MessagesPopupProps) => {
+  const [messages, setMessages] = useState<GuestMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getInitials = (name) =>
+  const getInitials = (name: string) =>
     name
       .split(' ')
       .map((n) => n[0])
@@ -14,7 +26,7 @@ const MessagesPopup = ({ onClose }) => {
       .toUpperCase();
 
   useEffect(() => {
-    fetch("http://localhost:3000/guest-messages")
+    fetch(`${API_BASE_URL}/guest-messages`)
       .then((res) => res.json())
       .then((data) => {
         setMessages(data);

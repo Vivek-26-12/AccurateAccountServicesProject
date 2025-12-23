@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthData";
+import API_BASE_URL from '../config';
 
 // 🆕 Define contact type
 type Contact = {
@@ -45,7 +46,7 @@ export const ClientProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     if (user && user.role === "client") {
       axios
-        .get(`http://localhost:3000/clients/${user.auth_id}`)
+        .get(`${API_BASE_URL}/clients/${user.auth_id}`)
         .then((response) => {
           console.log("Fetched Client Data with Contacts:", response.data);
           setClients([response.data]); // Single client with contacts

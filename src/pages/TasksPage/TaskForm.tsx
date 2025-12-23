@@ -1,10 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSearch, FiUser, FiUsers, FiCalendar, FiChevronDown } from 'react-icons/fi';
 import { useUserContext } from '../../Data/UserData';
+import API_BASE_URL from '../../config';
 
-export const TaskForm = ({ onClose, onSubmit }) => {
+interface TaskFormProps {
+  onClose: () => void;
+  onSubmit: (data: any) => void;
+}
+
+interface Group {
+  group_id: number;
+  group_name: string;
+  created_at: string;
+}
+
+interface TaskFormData {
+  task_name: string;
+  assigned_type: 'user' | 'group';
+  assigned_to: string;
+  assigned_to_id: string | number;
+  assigned_to_name: string;
+  group_id: string | number;
+  status: string;
+  priority: string;
+  due_date: string;
+}
+
+interface ValidationErrors {
+  task_name?: string;
+  due_date?: string;
+  assigned_to?: string;
+  group_id?: string;
+}
+
+export const TaskForm = ({ onClose, onSubmit }: TaskFormProps) => {
   const { users, currentUser } = useUserContext();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TaskFormData>({
     task_name: '',
     assigned_type: 'user', // 'user' or 'group'
     assigned_to: '',
@@ -21,17 +52,17 @@ export const TaskForm = ({ onClose, onSubmit }) => {
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);
   const [showGroupDropdown, setShowGroupDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [groups, setGroups] = useState([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
-  const [error, setError] = useState(null);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   // Fetch groups from server
   useEffect(() => {
     const fetchGroups = async () => {
       setIsLoadingGroups(true);
       try {
-        const response = await fetch('http://localhost:3000/chats/all-groups');
+        const response = await fetch(`${API_BASE_URL}/chats/all-groups`);
         if (!response.ok) throw new Error('Failed to fetch groups');
         const data = await response.json();
         setGroups(data);
@@ -61,16 +92,16 @@ export const TaskForm = ({ onClose, onSubmit }) => {
   });
 
   // Filter groups based on search
-  const filteredGroups = groups.filter(group => 
+  const filteredGroups = groups.filter(group =>
     group.group_name.toLowerCase().includes(groupSearch.toLowerCase())
   );
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear validation errors when field is changed
-    if (validationErrors[name]) {
+    if (validationErrors[name as keyof ValidationErrors]) {
       setValidationErrors(prev => ({
         ...prev,
         [name]: undefined
@@ -79,43 +110,43 @@ export const TaskForm = ({ onClose, onSubmit }) => {
   };
 
   const validateForm = () => {
-    const errors = {};
-    
+    const errors: ValidationErrors = {};
+
     // Check task name
     if (!formData.task_name.trim()) {
       errors.task_name = 'Task name is required';
     }
-    
+
     // Check due date
     if (!formData.due_date) {
       errors.due_date = 'Due date is required';
     }
-    
+
     // Check assigned person if user type is selected
     if (formData.assigned_type === 'user' && !formData.assigned_to_id) {
       errors.assigned_to = 'Please select a person to assign this task';
     }
-    
+
     // Check group if group type is selected
     if (formData.assigned_type === 'group' && !formData.group_id) {
       errors.group_id = 'Please select a group to assign this task';
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Prepare the task data based on assignment type
       const taskData = {
@@ -128,11 +159,11 @@ export const TaskForm = ({ onClose, onSubmit }) => {
         group_id: formData.assigned_type === 'group' ? formData.group_id : null,
         assigned_to_name: formData.assigned_to_name
       };
-  
+
       // Call the parent's onSubmit handler with the form data
       onSubmit(taskData);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error);
       setError(error.message || 'Failed to submit form. Please try again.');
     } finally {
@@ -140,7 +171,7 @@ export const TaskForm = ({ onClose, onSubmit }) => {
     }
   };
 
-  const selectEmployee = (user) => {
+  const selectEmployee = (user: any) => {
     setFormData(prev => ({
       ...prev,
       assigned_to: `${user.first_name} ${user.last_name}`,
@@ -150,7 +181,7 @@ export const TaskForm = ({ onClose, onSubmit }) => {
     }));
     setShowEmployeeDropdown(false);
     setEmployeeSearch('');
-    
+
     // Clear validation error when employee is selected
     if (validationErrors.assigned_to) {
       setValidationErrors(prev => ({
@@ -160,7 +191,7 @@ export const TaskForm = ({ onClose, onSubmit }) => {
     }
   };
 
-  const selectGroup = (group) => {
+  const selectGroup = (group: Group) => {
     setFormData(prev => ({
       ...prev,
       group_id: group.group_id,
@@ -169,7 +200,7 @@ export const TaskForm = ({ onClose, onSubmit }) => {
     }));
     setShowGroupDropdown(false);
     setGroupSearch('');
-    
+
     // Clear validation error when group is selected
     if (validationErrors.group_id) {
       setValidationErrors(prev => ({
@@ -178,16 +209,16 @@ export const TaskForm = ({ onClose, onSubmit }) => {
       }));
     }
   };
-  
+
   // Handle assignment type change
-  const handleAssignmentTypeChange = (type) => {
-    setFormData(prev => ({ 
-      ...prev, 
+  const handleAssignmentTypeChange = (type: 'user' | 'group') => {
+    setFormData(prev => ({
+      ...prev,
       assigned_type: type,
       // Clear the other type's data when switching
       ...(type === 'user' ? { group_id: '', } : { assigned_to: '', assigned_to_id: '' })
     }));
-    
+
     // Clear validation errors when switching types
     setValidationErrors(prev => ({
       ...prev,
@@ -201,8 +232,8 @@ export const TaskForm = ({ onClose, onSubmit }) => {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md animate-scale-in max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white z-10 flex justify-between items-center border-b border-gray-200 p-4">
           <h3 className="text-lg font-semibold text-gray-800">Create New Task</h3>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
             aria-label="Close"
           >
@@ -239,22 +270,20 @@ export const TaskForm = ({ onClose, onSubmit }) => {
                 <button
                   type="button"
                   onClick={() => handleAssignmentTypeChange('user')}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors flex items-center ${
-                    formData.assigned_type === 'user'
-                      ? 'bg-blue-100 text-blue-700 border-blue-300'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors flex items-center ${formData.assigned_type === 'user'
+                    ? 'bg-blue-100 text-blue-700 border-blue-300'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                    }`}
                 >
                   <FiUser className="mr-1" /> Person
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAssignmentTypeChange('group')}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors flex items-center ${
-                    formData.assigned_type === 'group'
-                      ? 'bg-blue-100 text-blue-700 border-blue-300'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors flex items-center ${formData.assigned_type === 'group'
+                    ? 'bg-blue-100 text-blue-700 border-blue-300'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                    }`}
                 >
                   <FiUsers className="mr-1" /> Group
                 </button>
@@ -317,16 +346,14 @@ export const TaskForm = ({ onClose, onSubmit }) => {
                     {filteredEmployees.map(user => (
                       <div
                         key={user.user_id}
-                        className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center transition-colors ${
-                          user.user_id === currentUser?.user_id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                        }`}
+                        className={`px-4 py-2 hover:bg-blue-50 cursor-pointer flex items-center transition-colors ${user.user_id === currentUser?.user_id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                          }`}
                         onClick={() => selectEmployee(user)}
                       >
-                        <div className={`rounded-full p-1.5 mr-3 ${
-                          user.user_id === currentUser?.user_id 
-                            ? 'bg-blue-100 text-blue-600' 
-                            : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <div className={`rounded-full p-1.5 mr-3 ${user.user_id === currentUser?.user_id
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-gray-100 text-gray-600'
+                          }`}>
                           <FiUser size={14} />
                         </div>
                         <div className="flex-1">
@@ -350,16 +377,14 @@ export const TaskForm = ({ onClose, onSubmit }) => {
               </div>
 
               {formData.assigned_to && (
-                <div className={`mt-2 flex items-center text-sm rounded-lg p-3 ${
-                  formData.assigned_to_id === currentUser?.user_id 
-                    ? 'bg-blue-50 border border-blue-200' 
-                    : 'bg-gray-50 border border-gray-200'
-                }`}>
-                  <div className={`rounded-full p-2 mr-3 ${
-                    formData.assigned_to_id === currentUser?.user_id 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'bg-gray-100 text-gray-600'
+                <div className={`mt-2 flex items-center text-sm rounded-lg p-3 ${formData.assigned_to_id === currentUser?.user_id
+                  ? 'bg-blue-50 border border-blue-200'
+                  : 'bg-gray-50 border border-gray-200'
                   }`}>
+                  <div className={`rounded-full p-2 mr-3 ${formData.assigned_to_id === currentUser?.user_id
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'bg-gray-100 text-gray-600'
+                    }`}>
                     <FiUser size={16} />
                   </div>
                   <div>

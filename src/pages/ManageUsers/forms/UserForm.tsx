@@ -3,6 +3,7 @@ import { User, Mail, Phone, Shield, Key, UserPlus, Pencil } from 'lucide-react';
 import { NewUserForm } from '../type/UserFormTypes';
 import { uploadThumbnailToCloudinary } from '../../../cloudinaryUploads';
 import { useData } from '../../../context/DataContext';
+import API_BASE_URL from '../../../config';
 
 const VALID_ROLES = ['employee', 'admin'] as const;
 type UserRole = typeof VALID_ROLES[number];
@@ -24,7 +25,7 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { refreshUsers } = useData();
   const [selectedRole, setSelectedRole] = useState<UserRole>('employee');
-  
+
   // Form validation states
   const [errors, setErrors] = useState<{
     username?: string;
@@ -80,14 +81,14 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
       email?: string;
       phone?: string;
     } = {};
-    
+
     // Username validation
     if (!newUser.username) {
       newErrors.username = 'Username is required';
     } else if (newUser.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
     }
-    
+
     // Password validation
     if (!newUser.password) {
       newErrors.password = 'Password is required';
@@ -96,47 +97,47 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
     } else if (!/(?=.*[A-Z])(?=.*[0-9])/.test(newUser.password)) {
       newErrors.password = 'Password must contain at least one uppercase letter and one number';
     }
-    
+
     // First name validation
     if (!newUser.first_name) {
       newErrors.first_name = 'First name is required';
     } else if (newUser.first_name.length < 2) {
       newErrors.first_name = 'First name must be at least 2 characters';
     }
-    
+
     // Last name validation
     if (!newUser.last_name) {
       newErrors.last_name = 'Last name is required';
     } else if (newUser.last_name.length < 2) {
       newErrors.last_name = 'Last name must be at least 2 characters';
     }
-    
+
     // Email validation
     if (!newUser.email) {
       newErrors.email = 'Email is required';
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(newUser.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     // Phone validation
     if (!newUser.phone) {
       newErrors.phone = 'Phone number is required';
     } else if (!/^\d{10}$/.test(newUser.phone.replace(/[^0-9]/g, ''))) {
       newErrors.phone = 'Please enter a valid 10-digit phone number';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return;
     }
-    
+
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -160,7 +161,7 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
 
       // console.log('Submitting user data:', userData);
 
-      const response = await fetch('http://localhost:3000/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -198,7 +199,7 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
   // Handle input changes with real-time validation
   const handleInputChange = (field: keyof NewUserForm, value: string) => {
     setNewUser({ ...newUser, [field]: value });
-    
+
     // Clear the specific error when user starts typing again
     if (errors[field]) {
       setErrors({ ...errors, [field]: undefined });
@@ -253,9 +254,8 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
               required
               value={newUser.first_name}
               onChange={(e) => handleInputChange('first_name', e.target.value)}
-              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${
-                errors.first_name ? 'border-red-500' : ''
-              }`}
+              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${errors.first_name ? 'border-red-500' : ''
+                }`}
               onBlur={() => {
                 if (!newUser.first_name) {
                   setErrors({ ...errors, first_name: 'First name is required' });
@@ -278,9 +278,8 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
               required
               value={newUser.last_name}
               onChange={(e) => handleInputChange('last_name', e.target.value)}
-              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${
-                errors.last_name ? 'border-red-500' : ''
-              }`}
+              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${errors.last_name ? 'border-red-500' : ''
+                }`}
               onBlur={() => {
                 if (!newUser.last_name) {
                   setErrors({ ...errors, last_name: 'Last name is required' });
@@ -303,9 +302,8 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
               required
               value={newUser.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${
-                errors.email ? 'border-red-500' : ''
-              }`}
+              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${errors.email ? 'border-red-500' : ''
+                }`}
               onBlur={() => {
                 if (!newUser.email) {
                   setErrors({ ...errors, email: 'Email is required' });
@@ -326,9 +324,8 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
               required
               value={newUser.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${
-                errors.phone ? 'border-red-500' : ''
-              }`}
+              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${errors.phone ? 'border-red-500' : ''
+                }`}
               onBlur={() => {
                 if (!newUser.phone) {
                   setErrors({ ...errors, phone: 'Phone number is required' });
@@ -355,9 +352,8 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
               required
               value={newUser.username}
               onChange={(e) => handleInputChange('username', e.target.value)}
-              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${
-                errors.username ? 'border-red-500' : ''
-              }`}
+              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${errors.username ? 'border-red-500' : ''
+                }`}
               onBlur={() => {
                 if (!newUser.username) {
                   setErrors({ ...errors, username: 'Username is required' });
@@ -378,18 +374,17 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
               required
               value={newUser.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
-              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${
-                errors.password ? 'border-red-500' : ''
-              }`}
+              className={`mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border ${errors.password ? 'border-red-500' : ''
+                }`}
               onBlur={() => {
                 if (!newUser.password) {
                   setErrors({ ...errors, password: 'Password is required' });
                 } else if (newUser.password.length < 6) {
                   setErrors({ ...errors, password: 'Password must be at least 6 characters' });
                 } else if (!/(?=.*[A-Z])(?=.*[0-9])/.test(newUser.password)) {
-                  setErrors({ 
-                    ...errors, 
-                    password: 'Password must contain at least one uppercase letter and one number' 
+                  setErrors({
+                    ...errors,
+                    password: 'Password must contain at least one uppercase letter and one number'
                   });
                 }
               }}

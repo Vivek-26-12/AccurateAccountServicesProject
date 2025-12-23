@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiX, FiMessageCircle } from 'react-icons/fi';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const ClientFeedbackPopup = ({ onClose }) => {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -9,7 +10,7 @@ const ClientFeedbackPopup = ({ onClose }) => {
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/feedback/all");
+        const response = await axios.get(`${API_BASE_URL}/feedback/all`);
         const formatted = response.data.map(fb => ({
           message: fb.message,
           client: `${fb.company_name} (${fb.contact_person})`,

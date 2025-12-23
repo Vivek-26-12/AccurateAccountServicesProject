@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from "react";
 import axios from "axios";
 import { useUserContext } from "./UserData";
+import API_BASE_URL from '../config';
 
 type UnseenMessages = {
   personal_chats: Record<number, number>;
@@ -42,7 +43,7 @@ export const UnseenMessagesProvider: React.FC<{ children: ReactNode }> = ({ chil
     setError(null);
 
     try {
-      const response = await axios.get(`http://localhost:3000/unseen-messages/all?user_id=${authUser.user_id}`);
+      const response = await axios.get(`${API_BASE_URL}/unseen-messages/all?user_id=${authUser.user_id}`);
       setUnseenMessages(response.data);
     } catch (err) {
       console.error("Error fetching unseen messages:", err);
@@ -65,7 +66,7 @@ export const UnseenMessagesProvider: React.FC<{ children: ReactNode }> = ({ chil
         }
       }));
 
-      await axios.post("http://localhost:3000/mark-personal-messages-seen", {
+      await axios.post(`${API_BASE_URL}/mark-personal-messages-seen`, {
         sender_id: senderId,
         receiver_id: authUser.user_id
       });
@@ -89,7 +90,7 @@ export const UnseenMessagesProvider: React.FC<{ children: ReactNode }> = ({ chil
         }
       }));
 
-      await axios.post("http://localhost:3000/mark-group-messages-seen", {
+      await axios.post(`${API_BASE_URL}/mark-group-messages-seen`, {
         user_id: authUser.user_id,
         group_id: groupId
       });

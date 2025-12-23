@@ -3,6 +3,7 @@ import { Check, Clock, Folder, FileText, ExternalLink } from 'lucide-react';
 import { Modal } from './Documents/Modal';
 import { ClientContext } from '../Data/ClientData';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 interface Document {
   doc_id: number;
@@ -39,8 +40,8 @@ function DocumentItem({ doc }: { doc: Document }) {
     <div
       onClick={handleClick}
       className={`flex items-center justify-between p-4 my-2 rounded-lg transition-all ${doc.doc_data
-          ? 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-sm cursor-pointer'
-          : 'bg-gray-50 border border-gray-100 cursor-default'
+        ? 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-sm cursor-pointer'
+        : 'bg-gray-50 border border-gray-100 cursor-default'
         }`}
     >
       <div className="flex items-center">
@@ -91,7 +92,7 @@ function ClientDocument({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
       try {
         setLoading(true);
         const clientId = clients[0].client_id;
-        const apiUrl = `http://localhost:3000/clientDataRoutes?client_id=${clientId}`;
+        const apiUrl = `${API_BASE_URL}/clientDataRoutes?client_id=${clientId}`;
 
         const response = await axios.get(apiUrl);
 
@@ -148,9 +149,9 @@ function ClientDocument({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
                 </div>
               </div>
               <div className="space-y-3">
-              {clientData.importantDocuments.slice(0, 2).map((doc) => (
-  <DocumentItem key={`root-imp-${doc.doc_id}`} doc={doc} />
-))}
+                {clientData.importantDocuments.slice(0, 2).map((doc) => (
+                  <DocumentItem key={`root-imp-${doc.doc_id}`} doc={doc} />
+                ))}
 
               </div>
             </div>
