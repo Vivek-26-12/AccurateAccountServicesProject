@@ -27,7 +27,11 @@ const unseenMessagesRoutes = require("./unseenMessagesRoutes");
 const app = express();
 app.use(express.json());
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -37,6 +41,8 @@ const io = new Server(server, {
     cors: {
         origin: "*", // Allow all origins (update for production if needed)
         methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
     },
 });
 
@@ -104,4 +110,13 @@ app.use("/delete", deleteUserClientRoutes(db));
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     // Server started
+    console.log(`Server is running on port ${PORT}`);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
 });

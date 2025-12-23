@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import axios from 'axios';
+import API_BASE_URL from '../config'; // Import API_BASE_URL
 
-// Define the user type
+
 interface User {
   auth_id: number;
   username: string;
   role: "admin" | "employee" | "client";
-  phone :number;
+  phone: number;
   created_at: string;
   updated_at: string;
 }
@@ -49,19 +50,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem('user');
 
     if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        try {
-            const response = await axios.get(`/users/${userData.auth_id}`);
-            if (response.data) {
-                setUser(response.data);
-                localStorage.setItem('user', JSON.stringify(response.data));
-            }
-        } catch (error) {
-            console.error('Failed to fetch user data:', error);
-            // Handle error (e.g., clear user data, redirect to login)
-            setUser(null);
-            localStorage.removeItem('user');
+      const userData = JSON.parse(storedUser);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/users/${userData.auth_id}`);
+        if (response.data) {
+          setUser(response.data);
+          localStorage.setItem('user', JSON.stringify(response.data));
         }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Handle error (e.g., clear user data, redirect to login)
+        setUser(null);
+        localStorage.removeItem('user');
+      }
     }
   };
 

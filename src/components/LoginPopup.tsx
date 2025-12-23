@@ -4,7 +4,7 @@ import API_BASE_URL from '../config';
 import { useNavigate } from 'react-router-dom';
 import { X, Lock, User, Eye, EyeOff } from 'lucide-react';
 
-export default function LoginPopup({ onClose }) {
+export default function LoginPopup({ onClose }: { onClose: () => void }) {
   const { login } = useAuth(); // Using auth context
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -51,15 +51,20 @@ export default function LoginPopup({ onClose }) {
 
       onClose();
       navigate(redirectPath);
-    } catch (err) {
-      setError(err.message);
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      if (err.message === 'Failed to fetch') {
+        setError("Network error: Unable to reach the server. Please check your connection or try again later.");
+      } else {
+        setError(err.message || 'An unknown error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleLogin();
     }
@@ -127,8 +132,8 @@ export default function LoginPopup({ onClose }) {
               onClick={handleLogin}
               disabled={isLoading || !username || !password}
               className={`w-full py-3 px-4 rounded-lg font-medium text-white flex items-center justify-center ${isLoading || !username || !password
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                ? 'bg-blue-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
                 } transition-colors`}
             >
               {isLoading ? 'Loging in...' : 'Log In'}
