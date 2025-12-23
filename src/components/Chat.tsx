@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useUserContext } from '../Data/UserData';
 import { useUnseenMessages } from '../Data/UnseenMessagesContext';
 import API_BASE_URL from '../config';
+import { io, Socket } from 'socket.io-client';
 
 interface User {
   user_id: string | number;
@@ -84,6 +85,20 @@ const Chat = () => {
 
   const defaultProfilePic = 'https://img.freepik.com/premium-vector/avatar-profile-icon-flat-style-male-user-profile-vector-illustration-isolated-background-man-profile-sign-business-concept_157943-38764.jpg?semt=ais_hybrid';
 
+  // Refs for accessing state inside socket listener without dependencies
+  const selectedGroupChatRef = useRef(selectedGroupChat);
+  const selectedUserChatRef = useRef(selectedUserChat);
+  const usersRef = useRef(users);
+  const currentUserRef = useRef(currentUser);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    selectedGroupChatRef.current = selectedGroupChat;
+    selectedUserChatRef.current = selectedUserChat;
+    usersRef.current = users;
+    currentUserRef.current = currentUser;
+  }, [selectedGroupChat, selectedUserChat, users, currentUser]);
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
@@ -102,14 +117,19 @@ const Chat = () => {
   };
 
   const fetchUsers = async () => {
+
     try {
-      const response = await fetch("${API_BASE_URL}/users");
+      const response = await fetch(`${API_BASE_URL}/users`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
+
       const usersData = Array.isArray(data) ? data : [];
-      setUsers(usersData.filter(user => user.user_id !== currentUser?.user_id));
+      if (currentUser) {
+        setUsers(usersData.filter(user => user.user_id !== currentUser.user_id));
+      } else {
+        setUsers(usersData);
+      }
     } catch (err) {
-      console.error("Error fetching users:", err);
       setError("Failed to load users");
       setUsers([]);
     }
@@ -122,7 +142,6 @@ const Chat = () => {
       const data = await response.json();
       setGroups(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching groups:", err);
       setError("Failed to load groups");
       setGroups([]);
     }
@@ -168,7 +187,6 @@ const Chat = () => {
 
       setMessages(messagesWithSenderInfo);
     } catch (err) {
-      console.error("Error fetching messages:", err);
       setError("Failed to load messages");
     } finally {
       setIsLoading(false);
@@ -182,7 +200,6 @@ const Chat = () => {
       const data = await response.json();
       setGroupMembers(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching group members:", err);
       // Don't show error to user, just empty list
       setGroupMembers([]);
     }
@@ -200,6 +217,123 @@ const Chat = () => {
       fetchGroupMembers(selectedGroupChat);
     }
   }, [selectedChat, selectedUserChat, selectedGroupChat, currentUser]);
+
+  // Socket.io Integration
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Initialize socket only if it doesn't exist
+    if (!socketRef.current) {
+      socketRef.current = io(API_BASE_URL);
+    }
+
+    const socket = socketRef.current;
+
+    const onConnect = () => {
+      // Join personal room on connect
+      socket.emit("join_room", `user_${currentUser.user_id}`);
+
+      // If we already have a selected group, join it too (in case of reconnect)
+      if (selectedGroupChatRef.current) {
+        socket.emit("join_room", `group_${selectedGroupChatRef.current}`);
+      }
+    };
+
+
+
+    const onReceiveMessage = (data: Message & { group_id?: number | string, receiver_id?: number | string }) => {
+
+
+      setMessages((prevMessages) => {
+        // Check if message already exists
+        if (prevMessages.some(m => m.message_id === data.message_id)) return prevMessages;
+
+        // Determine if the new message belongs to the CURRENTLY OPEN chat
+        let isForCurrentChat = false;
+        const currentSelectedGroupChat = selectedGroupChatRef.current;
+        const currentSelectedUserChat = selectedUserChatRef.current;
+        const currentUsers = usersRef.current;
+        const currentLoggedInUser = currentUserRef.current;
+
+        if (!currentLoggedInUser) return prevMessages;
+
+        if (currentSelectedGroupChat && data.group_id && String(data.group_id) === String(currentSelectedGroupChat)) {
+          isForCurrentChat = true;
+        } else if (currentSelectedUserChat && !data.group_id) {
+          // For 1-on-1, it matches if it's FROM the selected user OR TO the selected user (my own echo)
+          if (String(data.sender_id) === String(currentLoggedInUser.user_id) && String(data.receiver_id) === String(currentSelectedUserChat)) {
+            isForCurrentChat = true;
+          } else if (String(data.sender_id) === String(currentSelectedUserChat) && String(data.receiver_id) === String(currentLoggedInUser.user_id)) {
+            isForCurrentChat = true;
+          }
+        }
+
+        if (isForCurrentChat) {
+          const sender = currentUsers.find((u: User) => String(u.user_id) === String(data.sender_id));
+          const isMe = String(data.sender_id) === String(currentLoggedInUser.user_id);
+
+          const newMsg: Message = {
+            message_id: data.message_id,
+            sender_id: data.sender_id,
+            message: data.message,
+            created_at: data.created_at,
+            first_name: isMe ? currentLoggedInUser.first_name : (sender?.first_name || 'Unknown'),
+            last_name: isMe ? currentLoggedInUser.last_name : (sender?.last_name || ''),
+            profile_pic: isMe ? currentLoggedInUser.profile_pic : (sender?.profile_pic || defaultProfilePic)
+          };
+
+          // Scroll to bottom
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+          return [...prevMessages, newMsg];
+        } else {
+          // If not current chat, refresh notifications
+          refreshUnseenMessages();
+          return prevMessages;
+        }
+      });
+    };
+
+    // Attach listeners
+    if (!socket.hasListeners("connect")) socket.on("connect", onConnect);
+
+    // Remove existing listener before adding new one to avoid duplicates if effect re-runs (though we try to avoid it)
+    socket.off("receive_message");
+    socket.on("receive_message", onReceiveMessage);
+
+    // Initial join if already connected
+    if (socket.connected) {
+      onConnect();
+    }
+
+    return () => {
+      // Cleanup listeners but KEEP the connection alive usually, 
+      // but since we might change user, we can disconnect or just leave rooms.
+      // For now, let's keep it simple: disconnect on unmount or user change.
+      socket.off("connect", onConnect);
+
+      socket.off("receive_message", onReceiveMessage);
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [currentUser, refreshUnseenMessages]);
+
+  // Separate effect for joining group rooms when selectedGroupChat changes
+  useEffect(() => {
+    if (!currentUser || !socketRef.current) return;
+    const socket = socketRef.current;
+
+    // Since we are reusing the socket, we just emit join/leave
+    if (selectedGroupChat) {
+      socket.emit("join_room", `group_${selectedGroupChat}`);
+    }
+
+    return () => {
+      if (selectedGroupChat) {
+        socket.emit("leave_room", `group_${selectedGroupChat}`);
+      }
+    };
+  }, [currentUser, selectedGroupChat]);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -294,7 +428,7 @@ const Chat = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('${API_BASE_URL}/announcements');
+      const response = await fetch(`${API_BASE_URL}/announcements`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
 
@@ -316,7 +450,6 @@ const Chat = () => {
               profile_pic: userData.profile_pic || defaultProfilePic
             };
           } catch (err) {
-            console.error("Error fetching user data:", err);
             return announcement;
           }
         })
@@ -324,7 +457,6 @@ const Chat = () => {
 
       setAnnouncements(announcementsWithUserData);
     } catch (err) {
-      console.error("Error fetching announcements:", err);
       setError("Failed to load announcements");
     } finally {
       setIsLoading(false);
@@ -347,7 +479,7 @@ const Chat = () => {
     if (!announcementTitle.trim() || !announcementMessage.trim() || !currentUser) return;
 
     try {
-      const response = await axios.post('${API_BASE_URL}/announcements', {
+      const response = await axios.post(`${API_BASE_URL}/announcements`, {
         auth_id: currentUser.auth_id,
         title: announcementTitle,
         message: announcementMessage
@@ -366,7 +498,6 @@ const Chat = () => {
       setAnnouncementMessage('');
       setIsAnnouncementFormOpen(false);
     } catch (err) {
-      console.error("Error posting announcement:", err);
       setError("Failed to post announcement");
     }
   };
@@ -375,7 +506,7 @@ const Chat = () => {
     if (!groupName.trim() || selectedMembers.length === 0 || !currentUser) return;
 
     try {
-      const response = await axios.post('${API_BASE_URL}/chats/groups', {
+      const response = await axios.post(`${API_BASE_URL}/chats/groups`, {
         group_name: groupName,
         creator_id: currentUser.user_id,
         members: [currentUser.user_id, ...selectedMembers]
@@ -388,8 +519,6 @@ const Chat = () => {
         setSelectedMembers([]);
       }
     } catch (err: any) {
-      console.error("Error creating group:", err);
-
       setError("Failed to create group");
     }
   };
@@ -399,58 +528,42 @@ const Chat = () => {
 
     try {
       if (selectedGroupChat) {
-        const response = await axios.post('${API_BASE_URL}/chats/messages', {
+        await axios.post(`${API_BASE_URL}/chats/messages`, {
           sender_id: currentUser.user_id,
           group_id: selectedGroupChat,
           message: newMessage
         });
 
-        const newMsg = {
-          message_id: response.data.message_id || Date.now(),
-          sender_id: currentUser.user_id,
-          message: newMessage,
-          created_at: new Date().toISOString(),
-          first_name: currentUser.first_name,
-          last_name: currentUser.last_name,
-          profile_pic: currentUser.profile_pic || defaultProfilePic
-        };
 
-        setMessages(prev => [...prev, newMsg]);
+
+        // Remove local append to rely on socket
         setNewMessage('');
-
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
       }
       else if (selectedUserChat) {
-        const response = await axios.post('${API_BASE_URL}/chats/messages', {
+        await axios.post(`${API_BASE_URL}/chats/messages`, {
           sender_id: currentUser.user_id,
           receiver_id: selectedUserChat,
           message: newMessage
         });
 
-        const newMsg = {
-          message_id: response.data.message_id || Date.now(),
-          sender_id: currentUser.user_id,
-          message: newMessage,
-          created_at: new Date().toISOString(),
-          first_name: currentUser.first_name,
-          last_name: currentUser.last_name,
-          profile_pic: currentUser.profile_pic || defaultProfilePic
-        };
 
-        setMessages(prev => [...prev, newMsg]);
+
+        // Optimistic UI update is handled by Socket.io receive_message now?
+        // Actually, for better UX, we might want to keep the local append or wait for socket.
+        // Given we emit "receive_message" to ourselves from backend, we can rely on that!
+        // So we REMOVE the setMessages here to avoid duplicate (one from local, one from socket).
+        // OR we can keep it and add logic to deduplicate.
+        // Easiest path: Don't setMessages locally here. Let the socket event handle it.
+        // BUT: if socket fails/lags, user waits.
+        // Better path: Append locally, but verify ID. DB insertion returns ID. Socket message returns same ID.
+        // We will remove local append here and rely on socket for consistency across tabs.
+
         setNewMessage('');
 
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+        // No explicit scroll needed here, the socket event listener will trigger it.
+
       }
     } catch (err: any) {
-      console.error("Detailed message send error:", {
-        error: err,
-        response: err.response?.data
-      });
       setError(`Failed to send message: ${err.response?.data?.message || err.message}`);
     }
   };
@@ -512,6 +625,10 @@ const Chat = () => {
                     <div>
                       <h2 className="text-xl font-bold text-gray-800">Workplace Chat</h2>
                       <p className="text-sm text-gray-500">Connected as {currentUser?.first_name}</p>
+                      {/* Debug Info */}
+                      <p className="text-xs text-red-500">
+                        DEBUG: Users: {users.length}, API: {API_BASE_URL}, Err: {error ?? 'None'}
+                      </p>
                     </div>
                     {isMobileView && (
                       <button

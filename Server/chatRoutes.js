@@ -1,7 +1,7 @@
 // chatRoutes.js
 const express = require("express");
 
-module.exports = (db) => {
+module.exports = (db, io) => {
   const router = express.Router();
 
   // GET chat messages (personal or group)
@@ -36,7 +36,7 @@ module.exports = (db) => {
       `;
       db.query(query, [user_id, other_user_id, other_user_id, user_id], (err, results) => {
         if (err) {
-          console.error("Error fetching personal chats:", err);
+
           return res.status(500).json({ error: "Error fetching personal chats" });
         }
         res.json(results);
@@ -61,7 +61,7 @@ module.exports = (db) => {
       `;
       db.query(query, [group_id], (err, results) => {
         if (err) {
-          console.error("Error fetching group messages:", err);
+
           return res.status(500).json({ error: "Error fetching group messages" });
         }
         res.json(results);
@@ -84,8 +84,22 @@ module.exports = (db) => {
       const query = "INSERT INTO PersonalChats (sender_id, receiver_id, message) VALUES (?, ?, ?)";
       db.query(query, [sender_id, receiver_id, message], (err, results) => {
         if (err) {
-          console.error("Error sending personal message:", err);
+
           return res.status(500).json({ error: "Error sending message" });
+        }
+        if (!err) {
+          const chat_id = results.insertId;
+          // Emit socket event to receiver's room
+          const messageData = {
+            message_id: chat_id,
+            sender_id,
+            receiver_id,
+            message,
+            created_at: new Date().toISOString(),
+            // You might want to fetch sender details here or handle it on frontend
+          };
+          io.to(`user_${receiver_id}`).emit("receive_message", messageData);
+          io.to(`user_${sender_id}`).emit("receive_message", messageData); // Also emit to sender (for other tabs)
         }
         res.json({ success: true, chat_id: results.insertId });
       });
@@ -95,8 +109,20 @@ module.exports = (db) => {
       const query = "INSERT INTO GroupChatMessages (group_id, sender_id, message) VALUES (?, ?, ?)";
       db.query(query, [group_id, sender_id, message], (err, results) => {
         if (err) {
-          console.error("Error sending group message:", err);
+
           return res.status(500).json({ error: "Error sending message" });
+        }
+        if (!err) {
+          const message_id = results.insertId;
+          // Emit socket event to group room
+          const messageData = {
+            message_id,
+            sender_id,
+            group_id,
+            message,
+            created_at: new Date().toISOString(),
+          };
+          io.to(`group_${group_id}`).emit("receive_message", messageData);
         }
         res.json({ success: true, message_id: results.insertId });
       });
@@ -129,7 +155,7 @@ module.exports = (db) => {
 
     db.query(query, [user_id], (err, results) => {
       if (err) {
-        console.error("Error fetching user groups:", err);
+
         return res.status(500).json({ error: "Error fetching groups" });
       }
       res.json(results);
@@ -155,7 +181,7 @@ module.exports = (db) => {
 
     db.query(query, [group_id], (err, results) => {
       if (err) {
-        console.error("Error fetching group members:", err);
+        // Error fetching group members
         return res.status(500).json({ error: "Error fetching group members" });
       }
       res.json(results);
@@ -174,7 +200,7 @@ module.exports = (db) => {
 
     db.query(query, (err, results) => {
       if (err) {
-        console.error("Error fetching all group names:", err);
+        // Error fetching all group names
         return res.status(500).json({ error: "Error fetching all group names" });
       }
       res.json(results);
@@ -192,17 +218,15 @@ module.exports = (db) => {
     // Start transaction
     db.beginTransaction(err => {
       if (err) {
-        console.error("Error starting transaction:", err);
         return res.status(500).json({ error: "Error creating group" });
       }
 
       // 1. Create the group
       const createGroupQuery = "INSERT INTO GroupChats (group_name) VALUES (?)";
-      console.log("Creating group:", group_name);
+
 
       db.query(createGroupQuery, [group_name], (err, results) => {
         if (err) {
-          console.error("SQL Error creating group:", err);
           return db.rollback(() => {
             res.status(500).json({ error: "Error creating group: " + err.message });
           });
@@ -210,7 +234,7 @@ module.exports = (db) => {
 
         const group_id = results.insertId;
         const membersToAdd = [...new Set(members)]; // members is just an array of ids now
-        console.log("Adding members:", membersToAdd);
+
 
         // 2. Add members to the group
         const addMembersQuery = "INSERT INTO GroupChatMembers (group_id, user_id) VALUES ?";
@@ -218,7 +242,6 @@ module.exports = (db) => {
 
         db.query(addMembersQuery, [membersValues], (err) => {
           if (err) {
-            console.error("SQL Error adding members:", err);
             return db.rollback(() => {
               res.status(500).json({ error: "Error adding group members: " + err.message });
             });
@@ -227,7 +250,6 @@ module.exports = (db) => {
           // Commit transaction
           db.commit(err => {
             if (err) {
-              console.error("Transaction Commit Error:", err);
               return db.rollback(() => {
                 res.status(500).json({ error: "Error creating group during commit" });
               });
@@ -257,7 +279,6 @@ module.exports = (db) => {
     const updateNameQuery = "UPDATE GroupChats SET group_name = ? WHERE group_id = ?";
     db.query(updateNameQuery, [group_name, group_id], (err) => {
       if (err) {
-        console.error("Error updating group name:", err);
         return res.status(500).json({ error: "Error updating group name" });
       }
 
@@ -268,7 +289,6 @@ module.exports = (db) => {
         const deleteMembersQuery = "DELETE FROM GroupChatMembers WHERE group_id = ?";
         db.query(deleteMembersQuery, [group_id], (err) => {
           if (err) {
-            console.error("Error clearing members for update:", err);
             return res.status(500).json({ error: "Error updating members" });
           }
 
@@ -277,7 +297,6 @@ module.exports = (db) => {
             const values = members.map(uid => [group_id, uid]);
             db.query(insertMembersQuery, [values], (err) => {
               if (err) {
-                console.error("Error inserting members for update:", err);
                 return res.status(500).json({ error: "Error updating members" });
               }
               res.json({ success: true, message: "Group updated successfully" });
@@ -308,7 +327,6 @@ module.exports = (db) => {
         if (err.code === 'ER_DUP_ENTRY') {
           return res.status(200).json({ message: "User is already a member" });
         }
-        console.error("Error adding group member:", err);
         return res.status(500).json({ error: "Error adding group member" });
       }
       res.json({ success: true, message: "Member added successfully" });
@@ -322,7 +340,6 @@ module.exports = (db) => {
     const query = "DELETE FROM GroupChatMembers WHERE group_id = ? AND user_id = ?";
     db.query(query, [group_id, user_id], (err) => {
       if (err) {
-        console.error("Error removing group member:", err);
         return res.status(500).json({ error: "Error removing group member" });
       }
       res.json({ success: true, message: "Member removed successfully" });
@@ -345,7 +362,6 @@ module.exports = (db) => {
 
     db.query(query, (err, results) => {
       if (err) {
-        console.error("Error fetching all groups:", err);
         return res.status(500).json({ error: "Error fetching groups" });
       }
       res.json(results);

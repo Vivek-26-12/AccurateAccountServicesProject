@@ -1,6 +1,8 @@
 // index.js
 const express = require("express");
 const mysql = require("mysql2");
+const http = require("http"); // Import http
+const { Server } = require("socket.io"); // Import socket.io
 const cors = require("cors");
 require("dotenv").config(); // Load environment variables
 
@@ -24,7 +26,39 @@ const unseenMessagesRoutes = require("./unseenMessagesRoutes");
 
 const app = express();
 app.use(express.json());
+app.use(express.json());
 app.use(cors());
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Allow all origins (update for production if needed)
+        methods: ["GET", "POST", "PUT", "DELETE"],
+    },
+});
+
+// Socket.io Connection Handler
+io.on("connection", (socket) => {
+
+
+    // User joins a room (e.g., "user_123" or "group_456")
+    socket.on("join_room", (room) => {
+        socket.join(room);
+
+    });
+
+    socket.on("leave_room", (room) => {
+        socket.leave(room);
+
+    });
+
+    socket.on("disconnect", () => {
+
+    });
+});
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -39,9 +73,9 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
     if (err) {
-        console.error("Database connection failed:", err);
+        // Handle error silently or log to file/service if needed
     } else {
-        console.log("Connected to MySQL database.");
+        // Connected
     }
 });
 
@@ -59,7 +93,7 @@ app.use("/", uploadOtherRoutes(db));
 app.use("/update", updateRoutes(db)); // Add this line
 app.use("/folders", folderRoutes(db)); // Mount the route at /folders
 app.use("/feedback", feedbackRoutes(db)); // 👈 mount
-app.use("/chats", chatRoutes(db));
+app.use("/chats", chatRoutes(db, io)); // Pass io instance
 app.use("/", unseenMessagesRoutes(db));
 app.use("/", taskRoutes(db));
 app.use("/guest-messages", guestMessageRoutes(db)); // 👈 mount route
@@ -68,6 +102,6 @@ app.use("/client-relations", clientRelationRoutes(db));
 app.use("/delete", deleteUserClientRoutes(db));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+server.listen(PORT, () => {
+    // Server started
 });

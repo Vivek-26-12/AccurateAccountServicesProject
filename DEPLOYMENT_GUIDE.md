@@ -28,7 +28,8 @@ Once finished, Vercel will give you a URL like `https://accurate-account-service
 
 1.  Your backend should be running on Render.
 2.  Ensure you have set the ENV variables (`DB_HOST`, etc.) in Render Dashboard.
+3.  **New Requirement**: Your backend now uses `socket.io`. Render supports this automatically over the default HTTPS port, so no extra configuration is needed for WebSockets.
 
 ## 3. Connecting them
 - The Frontend on Vercel knows how to talk to the Backend because you set `VITE_API_BASE_URL` in Step 1.
-- If you need to change the backend URL in the future, just update the Environment Variable in Vercel settings and redeploy.
+- The `socket.io` client automatically connects to the same URL defined in `src/config.ts` (which comes from `VITE_API_BASE_URL`).
