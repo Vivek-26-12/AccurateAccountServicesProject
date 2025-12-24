@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, Trash2, Edit, Search } from 'lucide-react';
+import { Eye, Trash2, Edit } from 'lucide-react';
 import { ViewUserModal } from './ViewUserModal';
 import { ViewClientModal } from './ViewClientModal';
 import { UserEditForm } from './UserEditForm';
@@ -63,7 +63,7 @@ const getInitials = (name1?: string | null, name2?: string | null) => {
   return `${firstInitial}${secondInitial}` || 'U';
 };
 
-export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) => {
+export const UserTable = ({ currentTab, searchTerm }: { currentTab?: 'users' | 'clients'; searchTerm: string }) => {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [filteredEntities, setFilteredEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,16 +71,12 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'users' | 'clients'>(currentTab || 'users');
-
-  useEffect(() => {
-    if (currentTab) setActiveTab(currentTab);
-  }, [currentTab]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     show: boolean;
     entity: Entity | null;
   }>({ show: false, entity: null });
+
+  const activeTab = currentTab || 'users';
   const { refreshUsers, refreshClients } = useData();
 
   useEffect(() => {
@@ -158,8 +154,6 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      // console.log('Update successful:', data);
       refreshUsers();
     } catch (error) {
       console.error('Error updating user:', error);
@@ -169,7 +163,6 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
 
   const updateClientInDatabase = async (updatedClient: Client): Promise<void> => {
     try {
-      // console.log('Sending client update:', updatedClient);
       const response = await fetch(`${API_BASE_URL}/update/update-client`, {
         method: 'PUT',
         headers: {
@@ -178,14 +171,11 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
         body: JSON.stringify(updatedClient),
       });
 
-      // console.log('Update response status:', response.status);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      // console.log('Client update successful:', data);
       refreshClients();
     } catch (error) {
       console.error('Error updating client:', error);
@@ -230,8 +220,6 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
       } else {
         refreshClients();
       }
-
-      // alert(`${type === 'user' ? 'User' : 'Client'} deleted successfully`);
     } catch (err) {
       console.error('Error deleting entity:', err);
       alert(`Error deleting ${type}: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -333,40 +321,6 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
     <>
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-xl overflow-hidden border border-gray-300">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder={`Search ${activeTab === 'users' ? 'by name or email' : 'by company, contact or email'}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="flex border-b border-gray-200">
-            <button
-              className={`px-6 py-3 text-sm font-medium ${activeTab === 'users' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => {
-                setActiveTab('users');
-                setSearchTerm('');
-              }}
-            >
-              Users
-            </button>
-            <button
-              className={`px-6 py-3 text-sm font-medium ${activeTab === 'clients' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => {
-                setActiveTab('clients');
-                setSearchTerm('');
-              }}
-            >
-              Clients
-            </button>
-          </div>
-
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
@@ -435,6 +389,7 @@ export const UserTable = ({ currentTab }: { currentTab?: 'users' | 'clients' }) 
           />
         )
       )}
+
 
       {deleteConfirmation.show && deleteConfirmation.entity && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">

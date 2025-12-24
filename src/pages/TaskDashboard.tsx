@@ -148,6 +148,10 @@ const TaskDashboard = () => {
       return matchesSearch && dueDate && dueDate < today;
     }
 
+    if (filter === 'completed') {
+      return matchesSearch && task.status === 'Completed';
+    }
+
     return matchesSearch;
   });
 
@@ -348,6 +352,26 @@ const TaskDashboard = () => {
               >
                 <FiCalendar size={14} />
                 <span>Upcoming</span>
+                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {tasks.filter(t => {
+                    const dueDate = t.due_date ? new Date(t.due_date) : null;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const nextWeek = new Date(today);
+                    nextWeek.setDate(today.getDate() + 7);
+
+                    const isUpcoming = dueDate && dueDate >= today && dueDate <= nextWeek;
+
+                    if (!isUpcoming) return false;
+
+                    if (currentUser?.role === 'employee') {
+                      const isMyGroup = t.real_group_id !== undefined && userGroupIds.includes(t.real_group_id);
+                      const isAssignedToMe = t.assigned_to_id === currentUser.user_id || t.assigned_to === "You";
+                      return isMyGroup || isAssignedToMe;
+                    }
+                    return true;
+                  }).length}
+                </span>
               </button>
               <button
                 onClick={() => setFilter('overdue')}
@@ -375,6 +399,27 @@ const TaskDashboard = () => {
                   }).length}
                 </span>
               </button>
+              <button
+                onClick={() => setFilter('completed')}
+                className={`px-3 py-2 text-sm rounded-lg flex items-center gap-1 transition-colors ${filter === 'completed'
+                  ? 'bg-green-600 text-white shadow-inner'
+                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                <FiCheckCircle size={14} />
+                <span>Completed</span>
+                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {tasks.filter(t => {
+                    if (t.status !== 'Completed') return false;
+                    if (currentUser?.role === 'employee') {
+                      const isMyGroup = t.real_group_id !== undefined && userGroupIds.includes(t.real_group_id);
+                      const isAssignedToMe = t.assigned_to_id === currentUser.user_id || t.assigned_to === "You";
+                      return isMyGroup || isAssignedToMe;
+                    }
+                    return true;
+                  }).length}
+                </span>
+              </button>
             </div>
           </div>
         </div>
@@ -384,10 +429,10 @@ const TaskDashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredTasks.map(task => (
               <TaskCard
+                key={task.task_id}
                 task={task}
                 onStatusChange={handleStatusChange}
                 onDelete={handleDeleteTask}
-                userRole={currentUser?.role}
               />
             ))}
           </div>

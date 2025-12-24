@@ -8,6 +8,7 @@ import { ViewUserModal } from './ManageUsers/ViewUserModal';
 import { initialUsers } from '../Data/initialUsers';
 import AddUserModal from './ManageUsers/AddUserModal';
 import { GroupList } from './ManageUsers/GroupList';
+import { ViewGroupModal } from './ManageUsers/ViewGroupModal';
 import { useUserContext } from '../Data/UserData';
 
 
@@ -17,9 +18,17 @@ function ManageUsersMain() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isGroupViewModalOpen, setIsGroupViewModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'Admin' | 'Employee' | 'Client' | 'Group'>('Employee');
+
+  // Set initial tab for employee
+  React.useEffect(() => {
+    if (currentUser?.role === 'employee') {
+      setActiveTab('Client');
+    }
+  }, [currentUser]);
   // Group State
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
@@ -130,7 +139,7 @@ function ManageUsersMain() {
       pan: '',
       address: '',
     });
-    setActiveTab('Employee');
+    // setActiveTab('Employee'); 
   };
 
   const handleDeleteUser = (id: string) => {
@@ -157,22 +166,41 @@ function ManageUsersMain() {
           setSelectedGroup(null);
           setIsModalOpen(true);
         }}
+        userRole={currentUser?.role}
       />
 
       {activeTab === 'Group' ? (
         <div className="max-w-7xl mx-auto px-6 py-6">
           <GroupList
             groups={groups}
-            onDeleteGroup={(id) => { }}
+            onDeleteGroup={(id) => {
+              if (window.confirm("Are you sure you want to delete this group? This cannot be undone.")) {
+                fetch(`${API_BASE_URL}/chats/groups/${id}`, { method: 'DELETE' })
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.success) {
+                      fetch(`${API_BASE_URL}/chats/groups/all`).then(r => r.json()).then(setGroups);
+                    } else {
+                      alert("Failed to delete group: " + (data.error || 'Unknown error'));
+                    }
+                  })
+                  .catch(err => console.error("Error deleting group:", err));
+              }
+            }}
             onEditGroup={(group) => {
               setSelectedGroup(group);
               setIsModalOpen(true);
+            }}
+            onViewGroup={(group) => {
+              setSelectedGroup(group);
+              setIsGroupViewModalOpen(true);
             }}
           />
         </div>
       ) : (
         <UserTable
           currentTab={activeTab === 'Client' ? 'clients' : 'users'}
+          searchTerm={searchTerm}
         />
       )}
 
@@ -249,6 +277,15 @@ function ManageUsersMain() {
           user={selectedUser}
         />
       )}
+
+      {selectedGroup && (
+        <ViewGroupModal
+          isOpen={isGroupViewModalOpen}
+          onClose={() => setIsGroupViewModalOpen(false)}
+          group={selectedGroup}
+        />
+      )}
+
     </div>
   );
 }

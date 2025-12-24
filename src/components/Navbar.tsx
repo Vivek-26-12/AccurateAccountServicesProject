@@ -49,6 +49,7 @@ export default function Navbar() {
       { label: 'Dashboard', path: '/employee-dashboard' },
       { label: 'Tasks', path: '/tasks' },
       { label: 'Documents', path: '/documents' },
+      { label: 'Manage Clients', path: '/manageusers' },
     ],
     client: [
       { label: 'Home', path: '/client-dashboard' },
@@ -199,7 +200,7 @@ export default function Navbar() {
 
       {/* Overlay to close menu when clicking outside */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />

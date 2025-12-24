@@ -13,7 +13,7 @@ import {
   FiUsers
 } from 'react-icons/fi';
 
-export const TaskCard = ({ task, onStatusChange, onDelete, userRole }) => {
+export const TaskCard = ({ task, onStatusChange, onDelete }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const statusColors = {
@@ -83,15 +83,13 @@ export const TaskCard = ({ task, onStatusChange, onDelete, userRole }) => {
           <h3 className="font-semibold text-gray-800 text-xl sm:text-2xl line-clamp-2 pr-2">
             {task.task_name}
           </h3>
-          {userRole !== 'employee' && (
-            <button
-              onClick={confirmDelete}
-              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-gray-100"
-              aria-label="Delete task"
-            >
-              <FiTrash2 size={18} />
-            </button>
-          )}
+          <button
+            onClick={confirmDelete}
+            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-gray-100"
+            aria-label="Delete task"
+          >
+            <FiTrash2 size={18} />
+          </button>
         </div>
 
         {/* Status and Priority badges */}

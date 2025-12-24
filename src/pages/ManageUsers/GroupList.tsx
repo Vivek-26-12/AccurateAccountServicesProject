@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Trash2, Edit } from 'lucide-react';
+import { Users, Trash2, Edit, Eye } from 'lucide-react';
 
 interface Group {
     group_id: number;
@@ -12,9 +12,10 @@ interface GroupListProps {
     groups: Group[];
     onDeleteGroup: (groupId: number) => void;
     onEditGroup: (group: Group) => void;
+    onViewGroup: (group: Group) => void;
 }
 
-export function GroupList({ groups, onDeleteGroup, onEditGroup }: GroupListProps) {
+export function GroupList({ groups, onDeleteGroup, onEditGroup, onViewGroup }: GroupListProps) {
     if (groups.length === 0) {
         return (
             <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -40,19 +41,26 @@ export function GroupList({ groups, onDeleteGroup, onEditGroup }: GroupListProps
                         </div>
                         <div className="flex space-x-2">
                             <button
+                                onClick={() => onViewGroup(group)}
+                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="View Group"
+                            >
+                                <Eye className="w-4 h-4" />
+                            </button>
+                            <button
                                 onClick={() => onEditGroup(group)}
                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                 title="Edit Group"
                             >
                                 <Edit className="w-4 h-4" />
                             </button>
-                            {/* <button
-                onClick={() => onDeleteGroup(group.group_id)}
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete Group"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button> */}
+                            <button
+                                onClick={() => onDeleteGroup(group.group_id)}
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete Group"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
 

@@ -346,6 +346,45 @@ module.exports = (db, io) => {
     });
   });
 
+  // DELETE group (and all associated data)
+  router.delete("/groups/:group_id", (req, res) => {
+    const { group_id } = req.params;
+
+    db.beginTransaction(err => {
+      if (err) return res.status(500).json({ error: "Transaction error" });
+
+      // 1. Delete members
+      db.query("DELETE FROM GroupChatMembers WHERE group_id = ?", [group_id], (err) => {
+        if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting members" }));
+
+        // 2. Delete messages
+        db.query("DELETE FROM GroupChatMessages WHERE group_id = ?", [group_id], (err) => {
+          if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting messages" }));
+
+          // 3. Delete unseen records
+          db.query("DELETE FROM GroupChatMessageSeen WHERE group_id = ?", [group_id], (err) => {
+            if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting seen records" }));
+
+            // 4. Update Tasks (set group_id to null)
+            db.query("UPDATE Tasks SET group_id = NULL WHERE group_id = ?", [group_id], (err) => {
+              if (err) return db.rollback(() => res.status(500).json({ error: "Error updating tasks" }));
+
+              // 5. Delete Group
+              db.query("DELETE FROM GroupChats WHERE group_id = ?", [group_id], (err) => {
+                if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting group" }));
+
+                db.commit(err => {
+                  if (err) return db.rollback(() => res.status(500).json({ error: "Commit error" }));
+                  res.json({ success: true, message: "Group deleted successfully" });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
   // GET all groups (for admin)
   router.get("/groups/all", (req, res) => {
     const query = `
