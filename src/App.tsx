@@ -28,7 +28,14 @@ function App() {
         <main className="pt-16">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/employee-dashboard"
               element={
@@ -37,10 +44,38 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/client-dashboard" element={<ClientDashboard />} />
-            <Route path="/tasks" element={<TaskDashboard />} />
-            <Route path="/documents" element={<DocumentsMain />} />
-            <Route path="/manageusers" element={<ManageUsersMain />} />
+            <Route
+              path="/client-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['client']}>
+                  <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <ProtectedRoute>
+                  <TaskDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents"
+              element={
+                <ProtectedRoute>
+                  <DocumentsMain />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manageusers"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'employee']}>
+                  <ManageUsersMain />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact" element={<Contact />} />
