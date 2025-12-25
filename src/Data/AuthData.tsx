@@ -32,6 +32,7 @@ interface User {
   phone: number;
   created_at: string;
   updated_at: string;
+  profilePic?: string;
 }
 
 // Define the AuthContext type

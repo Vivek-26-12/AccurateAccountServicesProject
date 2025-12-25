@@ -105,7 +105,7 @@ app.use("/", taskRoutes(db));
 app.use("/guest-messages", guestMessageRoutes(db)); // 👈 mount route
 app.use('/announcements', announcementsRouter(db));
 app.use("/client-relations", clientRelationRoutes(db));
-app.use("/delete", deleteUserClientRoutes(db));
+app.use("/delete", deleteUserClientRoutes(db, io));
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

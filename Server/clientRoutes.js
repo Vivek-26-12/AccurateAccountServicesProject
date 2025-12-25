@@ -3,11 +3,11 @@ const express = require("express");
 module.exports = (db) => {
     const router = express.Router();
 
-    console.log("Clients route file is loaded!"); // Debugging log
+    // console.log("Clients route file is loaded!"); // Debugging log
 
     // Fetch all clients with their contacts
     router.get("/", (req, res) => {
-        console.log("Received request to fetch all clients");
+        // console.log("Received request to fetch all clients");
 
         const clientQuery = `
             SELECT Clients.client_id, Clients.auth_id, Auth.username, Auth.role,
@@ -61,7 +61,7 @@ module.exports = (db) => {
     // Fetch a specific client with their contacts by auth_id
     router.get("/:id", (req, res) => {
         const { id } = req.params;
-        console.log(`Received request to fetch client with auth_id: ${id}`);
+        // console.log(`Received request to fetch client with auth_id: ${id}`);
 
         const clientQuery = `
             SELECT * FROM Clients WHERE auth_id = ?

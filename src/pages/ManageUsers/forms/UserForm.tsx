@@ -5,7 +5,7 @@ import { uploadThumbnailToCloudinary } from '../../../cloudinaryUploads';
 import { useData } from '../../../context/DataContext';
 import API_BASE_URL from '../../../config';
 
-const VALID_ROLES = ['employee', 'admin'] as const;
+const VALID_ROLES = ['employee'] as const;
 type UserRole = typeof VALID_ROLES[number];
 
 interface UserFormProps {
@@ -35,12 +35,6 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
     email?: string;
     phone?: string;
   }>({});
-
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const role = e.target.value as UserRole;
-    setSelectedRole(role);
-    setNewUser({ ...newUser, role });
-  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -396,17 +390,12 @@ export default function UserForm({ newUser, setNewUser, onSubmit, onClose }: Use
             <label className="block text-sm font-medium text-gray-700 flex items-center">
               <Shield className="w-4 h-4 mr-2 text-gray-500" /> Role
             </label>
-            <select
-              value={selectedRole}
-              onChange={handleRoleChange}
-              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border bg-white"
-            >
-              {VALID_ROLES.map((role) => (
-                <option key={role} value={role}>
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value="Employee"
+              disabled
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-3 border bg-gray-100 text-gray-500 cursor-not-allowed"
+            />
           </div>
         </div>
       </div>

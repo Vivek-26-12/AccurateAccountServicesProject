@@ -88,7 +88,7 @@ module.exports = (db) => {
           })),
           otherDocuments: []
         };
-        
+
 
         // Process important documents - assign to folders if they have folder_id
         client.importantDocuments.forEach(doc => {

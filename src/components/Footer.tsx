@@ -12,7 +12,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white text-lg sm:text-xl font-semibold mb-3 sm:mb-4">About AAS</h3>
             <p className="text-sm sm:text-base leading-relaxed text-gray-400">
-              Professional accounting services delivering accuracy and excellence since 1970.
+              Professional accounting services delivering accuracy and excellence since 1995.
               Trusted by hundreds of businesses for reliable and transparent financial solutions.
             </p>
           </div>

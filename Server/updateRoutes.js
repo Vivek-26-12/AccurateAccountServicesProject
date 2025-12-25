@@ -6,10 +6,10 @@ module.exports = (db) => {
    * Update user information across Auth and Users tables
    */
   router.put('/update-user', async (req, res) => {
-    console.log('User update request received:', {
-      body: req.body,
-      timestamp: new Date().toISOString()
-    });
+    // console.log('User update request received:', {
+    //   body: req.body,
+    //   timestamp: new Date().toISOString()
+    // });
 
     const {
       auth_id,
@@ -27,14 +27,14 @@ module.exports = (db) => {
     // Validate required fields
     if (!auth_id || !user_id) {
       console.error('Missing required IDs:', { auth_id, user_id });
-      return res.status(400).json({ 
-        error: 'Missing required fields: auth_id and user_id' 
+      return res.status(400).json({
+        error: 'Missing required fields: auth_id and user_id'
       });
     }
 
     try {
       await db.promise().beginTransaction();
-      console.log('Transaction started for user update');
+      // console.log('Transaction started for user update');
 
       // 1. Update Auth table
       const authUpdateParams = [username, role, auth_id];
@@ -45,7 +45,7 @@ module.exports = (db) => {
         authUpdateParams.splice(1, 0, password); // Insert password at position 1
       }
 
-      console.log('Executing Auth update:', { query: authUpdateQuery, params: authUpdateParams });
+      // console.log('Executing Auth update:', { query: authUpdateQuery, params: authUpdateParams });
       const [authResult] = await db.promise().query(authUpdateQuery, authUpdateParams);
 
       // 2. Update Users table
@@ -56,13 +56,13 @@ module.exports = (db) => {
       `;
       const userUpdateParams = [first_name, last_name, email, phone, profile_pic, user_id];
 
-      console.log('Executing Users update:', { query: userUpdateQuery, params: userUpdateParams });
+      // console.log('Executing Users update:', { query: userUpdateQuery, params: userUpdateParams });
       const [userResult] = await db.promise().query(userUpdateQuery, userUpdateParams);
 
       await db.promise().commit();
-      console.log('User update transaction committed successfully');
+      // console.log('User update transaction committed successfully');
 
-      res.status(200).json({ 
+      res.status(200).json({
         success: true,
         message: 'User updated successfully',
         auth_affected: authResult.affectedRows,
@@ -76,8 +76,8 @@ module.exports = (db) => {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
-      
-      res.status(500).json({ 
+
+      res.status(500).json({
         error: 'Failed to update user',
         details: error.message
       });
@@ -88,10 +88,10 @@ module.exports = (db) => {
    * Update client information across Auth, Clients, and ClientContacts tables
    */
   router.put('/update-client', async (req, res) => {
-    console.log('Client update request received:', {
-      body: req.body,
-      timestamp: new Date().toISOString()
-    });
+    // console.log('Client update request received:', {
+    //   body: req.body,
+    //   timestamp: new Date().toISOString()
+    // });
 
     const {
       auth_id,
@@ -110,14 +110,14 @@ module.exports = (db) => {
     // Validate required fields
     if (!auth_id || !client_id) {
       console.error('Missing required IDs:', { auth_id, client_id });
-      return res.status(400).json({ 
-        error: 'Missing required fields: auth_id and client_id' 
+      return res.status(400).json({
+        error: 'Missing required fields: auth_id and client_id'
       });
     }
 
     try {
       await db.promise().beginTransaction();
-      console.log('Transaction started for client update');
+      // console.log('Transaction started for client update');
 
       // 1. Update Auth table
       const authUpdateParams = [username, auth_id];
@@ -128,7 +128,7 @@ module.exports = (db) => {
         authUpdateParams.splice(1, 0, password);
       }
 
-      console.log('Executing Auth update:', { query: authUpdateQuery, params: authUpdateParams });
+      // console.log('Executing Auth update:', { query: authUpdateQuery, params: authUpdateParams });
       const [authResult] = await db.promise().query(authUpdateQuery, authUpdateParams);
 
       // 2. Update Clients table
@@ -153,11 +153,11 @@ module.exports = (db) => {
         client_id
       ];
 
-      console.log('Executing Clients update:', { query: clientUpdateQuery, params: clientUpdateParams });
+      // console.log('Executing Clients update:', { query: clientUpdateQuery, params: clientUpdateParams });
       const [clientResult] = await db.promise().query(clientUpdateQuery, clientUpdateParams);
 
       // 3. Update ClientContacts
-      console.log('Deleting existing contacts for client:', client_id);
+      // console.log('Deleting existing contacts for client:', client_id);
       await db.promise().query(
         'DELETE FROM ClientContacts WHERE client_id = ?',
         [client_id]
@@ -171,7 +171,7 @@ module.exports = (db) => {
           contact.email
         ]);
 
-        console.log('Inserting new contacts:', { count: contactValues.length });
+        // console.log('Inserting new contacts:', { count: contactValues.length });
         const [contactsResult] = await db.promise().query(
           'INSERT INTO ClientContacts (client_id, contact_name, phone, email) VALUES ?',
           [contactValues]
@@ -179,9 +179,9 @@ module.exports = (db) => {
       }
 
       await db.promise().commit();
-      console.log('Client update transaction committed successfully');
+      // console.log('Client update transaction committed successfully');
 
-      res.status(200).json({ 
+      res.status(200).json({
         success: true,
         message: 'Client updated successfully',
         auth_affected: authResult.affectedRows,
@@ -196,8 +196,8 @@ module.exports = (db) => {
         stack: error.stack,
         timestamp: new Date().toISOString()
       });
-      
-      res.status(500).json({ 
+
+      res.status(500).json({
         error: 'Failed to update client',
         details: error.message
       });

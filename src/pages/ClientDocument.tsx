@@ -170,44 +170,46 @@ function ClientDocument({ isOpen, onClose }: { isOpen: boolean, onClose: () => v
             </div>
             <div className="space-y-4">
               {clientData.folders.length > 0 ? (
-                clientData.folders.map((folder) => (
-                  <div
-                    key={folder.folder_id}
-                    onClick={() => setSelectedFolder(folder)}
-                    className="group p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="bg-blue-50 text-blue-600 p-2 rounded-lg mr-3">
-                          <Folder className="w-5 h-5" />
+                clientData.folders
+                  .sort((a, b) => b.folder_name.localeCompare(a.folder_name))
+                  .map((folder) => (
+                    <div
+                      key={folder.folder_id}
+                      onClick={() => setSelectedFolder(folder)}
+                      className="group p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <div className="bg-blue-50 text-blue-600 p-2 rounded-lg mr-3">
+                            <Folder className="w-5 h-5" />
+                          </div>
+                          <h4 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                            {folder.folder_name}
+                          </h4>
                         </div>
-                        <h4 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                          {folder.folder_name}
-                        </h4>
+                        <div className="text-sm text-gray-500">
+                          {folder.importantDocuments.filter(d => d.doc_data).length +
+                            folder.otherDocuments.filter(d => d.doc_data).length}/
+                          {folder.importantDocuments.length + folder.otherDocuments.length} uploaded
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {folder.importantDocuments.filter(d => d.doc_data).length +
-                          folder.otherDocuments.filter(d => d.doc_data).length}/
-                        {folder.importantDocuments.length + folder.otherDocuments.length} uploaded
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{
-                          width: `${Math.round(
-                            (
-                              (folder.importantDocuments.filter(d => d.doc_data).length +
-                                folder.otherDocuments.filter(d => d.doc_data).length) /
-                              (folder.importantDocuments.length + folder.otherDocuments.length)
-                            ) * 100
-                          ) || 0}%`
-                        }}
-                      ></div>
+                      <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{
+                            width: `${Math.round(
+                              (
+                                (folder.importantDocuments.filter(d => d.doc_data).length +
+                                  folder.otherDocuments.filter(d => d.doc_data).length) /
+                                (folder.importantDocuments.length + folder.otherDocuments.length)
+                              ) * 100
+                            ) || 0}%`
+                          }}
+                        ></div>
 
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
               ) : (
                 <div className="p-6 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
                   <Folder className="w-8 h-8 mx-auto text-gray-400 mb-2" />

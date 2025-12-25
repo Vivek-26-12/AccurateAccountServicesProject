@@ -115,15 +115,14 @@ export function DocumentButton({
 
   return (
     <div className="w-full relative">
-      <button
+      <div
         onClick={hasData ? handleFileOpen : () => !isUploading && fileInputRef.current?.click()}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        disabled={isUploading}
         className={`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${hasData
-            ? 'bg-green-50 border border-green-200 hover:bg-green-100 hover:shadow-sm'
-            : 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 hover:from-red-100 hover:to-orange-100 hover:shadow-sm'
-          } ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          ? 'bg-green-50 border border-green-200 hover:bg-green-100 hover:shadow-sm'
+          : 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 hover:from-red-100 hover:to-orange-100 hover:shadow-sm'
+          } ${isUploading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <div className="flex items-center flex-grow">
           <div
@@ -174,7 +173,7 @@ export function DocumentButton({
             )}
           </div>
         )}
-      </button>
+      </div>
 
       <input
         type="file"

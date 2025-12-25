@@ -293,12 +293,29 @@ const Chat = () => {
       });
     };
 
+    const onUserDeleted = (data: { id: string | number, type: string }) => {
+      if (data.type === 'user') {
+        fetchUsers();
+        // If currently chatting with this user, clear selection
+        if (String(selectedUserChatRef.current) === String(data.id)) {
+          setSelectedUserChat(null);
+          setSelectedChat(null);
+          setMessages([]);
+        }
+      }
+      // Also refresh groups as memberships/counts might have changed
+      fetchGroups();
+    };
+
     // Attach listeners
     if (!socket.hasListeners("connect")) socket.on("connect", onConnect);
 
-    // Remove existing listener before adding new one to avoid duplicates if effect re-runs (though we try to avoid it)
+    // Remove existing listener before adding new one
     socket.off("receive_message");
     socket.on("receive_message", onReceiveMessage);
+
+    socket.off("user_deleted");
+    socket.on("user_deleted", onUserDeleted);
 
     // Initial join if already connected
     if (socket.connected) {
@@ -306,12 +323,10 @@ const Chat = () => {
     }
 
     return () => {
-      // Cleanup listeners but KEEP the connection alive usually, 
-      // but since we might change user, we can disconnect or just leave rooms.
-      // For now, let's keep it simple: disconnect on unmount or user change.
+      // Cleanup listeners
       socket.off("connect", onConnect);
-
       socket.off("receive_message", onReceiveMessage);
+      socket.off("user_deleted", onUserDeleted);
       socket.disconnect();
       socketRef.current = null;
     };
@@ -638,7 +653,7 @@ const Chat = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto scrollbar-hide">
                   {/* Announcements Section */}
                   <div
                     onClick={handleAnnouncementClick}
@@ -758,7 +773,7 @@ const Chat = () => {
                   </div>
 
                   {/* Group Form */}
-                  <div className="flex-1 p-4 overflow-y-auto">
+                  <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
                       <input
@@ -871,7 +886,7 @@ const Chat = () => {
                   </div>
 
                   {/* Announcement Content */}
-                  <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
+                  <div className="flex-1 overflow-y-auto bg-gray-50 p-4 scrollbar-hide">
                     {isAnnouncementFormOpen ? (
                       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
                         <div className="mb-4">
@@ -934,28 +949,28 @@ const Chat = () => {
                     ) : announcements.length > 0 ? (
                       <div className="space-y-4">
                         {announcements.map(announcement => (
-                          <div key={announcement.announcement_id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                            <div className="flex items-start mb-2">
+                          <div key={announcement.announcement_id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                            <div className="flex items-start mb-3">
                               <img
                                 src={announcement.profile_pic || defaultProfilePic}
                                 alt={`${announcement.first_name} ${announcement.last_name}`}
-                                className="w-10 h-10 rounded-full mr-3"
+                                className="w-11 h-11 rounded-full mr-4 border-2 border-white shadow-sm"
                               />
                               <div className="flex-1">
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <h4 className="font-semibold text-gray-800">
+                                    <h4 className="font-bold text-gray-900 text-base">
                                       {announcement.first_name} {announcement.last_name}
                                     </h4>
-                                    <h5 className="text-sm font-medium text-blue-600">{announcement.title}</h5>
+                                    <h5 className="text-sm font-semibold text-blue-600 mt-0.5">{announcement.title}</h5>
                                   </div>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-md">
                                     {formatTime(announcement.created_at)}
                                   </span>
                                 </div>
-                                <p className="mt-2 text-gray-700 whitespace-pre-wrap">
+                                <div className="mt-3 text-gray-600 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 p-3 rounded-lg">
                                   {announcement.message}
-                                </p>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1024,7 +1039,7 @@ const Chat = () => {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto bg-gray-50" style={{
+                  <div className="flex-1 overflow-y-auto bg-gray-50 scrollbar-hide" style={{
                     maxHeight: 'calc(100vh - 200px)',
                     padding: '1rem'
                   }}>

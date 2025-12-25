@@ -134,10 +134,12 @@ function DocumentsMain() {
         }
         throw new Error(errorText || 'Failed to fetch remaining folders');
       }
-      const updatedClient = await fetchClients();
+      const updatedClient = await fetchClients(currentUser?.user_id!);
       setClients(updatedClient);
 
       const data = await response.json();
+      // Sort remaining folders in descending order
+      data.sort((a: Folder, b: Folder) => b.folder_name.localeCompare(a.folder_name));
       setRemainingFolders(data);
       setFolderError('');
     } catch (error) {
@@ -193,7 +195,7 @@ function DocumentsMain() {
 
     } catch (error) {
       console.error('Error deleting folder:', error);
-      alert(error.message || 'Failed to delete folder');
+      alert((error as any).message || 'Failed to delete folder');
     }
   };
 
@@ -235,7 +237,7 @@ function DocumentsMain() {
 
     } catch (error) {
       console.error('Error deleting document:', error);
-      alert(error.message || 'Failed to delete document');
+      alert((error as any).message || 'Failed to delete document');
     }
   };
 
@@ -276,7 +278,7 @@ function DocumentsMain() {
 
     } catch (error) {
       console.error('Error deleting document:', error);
-      alert(error.message || 'Failed to delete document');
+      alert((error as any).message || 'Failed to delete document');
     }
   };
 
@@ -320,7 +322,7 @@ function DocumentsMain() {
 
     } catch (error) {
       console.error('Error removing document file:', error);
-      alert(error.message || 'Failed to remove document file');
+      alert((error as any).message || 'Failed to remove document file');
     }
   };
 
@@ -370,7 +372,7 @@ function DocumentsMain() {
         });
         setClients(updatedClients);
       }
-      const updatedClient = await fetchClients();
+      const updatedClient = await fetchClients(currentUser?.user_id!);
       setClients(updatedClient);
 
       setShowFolderModal(false);
@@ -380,7 +382,7 @@ function DocumentsMain() {
 
     } catch (error) {
       console.error('Error creating folder:', error);
-      setFolderError(error.message || 'Failed to create folder. Please try again.');
+      setFolderError((error as any).message || 'Failed to create folder. Please try again.');
     }
     finally {
       setIsCreatingFolder(false);
@@ -422,15 +424,17 @@ function DocumentsMain() {
         });
         setClients(updatedClients);
       }
-      const updatedClient = await fetchClients();
+      const updatedClient = await fetchClients(currentUser?.user_id!);
       setClients(updatedClient);
+
+      await fetchRemainingFolders(selectedClientId);
 
       setShowFolderModal(false);
       setFolderError('');
 
     } catch (error) {
       console.error('Error connecting folder:', error);
-      setFolderError(error.message || 'Failed to connect folder. Please try again.');
+      setFolderError((error as any).message || 'Failed to connect folder. Please try again.');
     }
   };
 
@@ -499,7 +503,7 @@ function DocumentsMain() {
       setNewDocumentName('');
     } catch (error) {
       console.error('Error creating document:', error);
-      alert(error.message || 'Failed to create document');
+      alert((error as any).message || 'Failed to create document');
     } finally {
       setIsCreatingDocument(false);
     }
@@ -622,7 +626,7 @@ function DocumentsMain() {
               clientId={client.client_id}
               userId={currentUser?.user_id || 0}
               isFavorite={client.isFavorite}
-              isRecent={client.isRecent}
+              isRecent={client.isRecent || false}
               onFavoriteToggle={handleFavoriteToggle}
               onSelect={() => handleClientSelect(client.contact_person, client.client_id)}
             />
@@ -725,7 +729,10 @@ function DocumentsMain() {
               </h3>
               <div className="space-y-3">
                 {clients
-                  .find((client) => client.contact_person === selectedClient)?.folders.map((folder, index) => (
+                  .find((client) => client.contact_person === selectedClient)
+                  ?.folders
+                  .sort((a, b) => b.folder_name.localeCompare(a.folder_name))
+                  .map((folder, index) => (
                     <div key={folder.folder_id || folder.folder_name} className="flex items-center justify-between">
                       <FolderButton
                         name={folder.folder_name}

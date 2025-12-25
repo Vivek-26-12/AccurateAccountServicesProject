@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 import { NewUserForm, User } from '../Data';
 import API_BASE_URL from '../config';
 import { Header } from './ManageUsers/Header';
@@ -32,6 +33,29 @@ function ManageUsersMain() {
   // Group State
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [deleteGroupConfirmation, setDeleteGroupConfirmation] = useState<{
+    show: boolean;
+    group: any | null;
+  }>({ show: false, group: null });
+
+  const confirmDeleteGroup = () => {
+    if (!deleteGroupConfirmation.group) return;
+
+    const groupId = deleteGroupConfirmation.group.group_id;
+    fetch(`${API_BASE_URL}/chats/groups/${groupId}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          fetch(`${API_BASE_URL}/chats/groups/all`).then(r => r.json()).then(setGroups);
+        } else {
+          alert("Failed to delete group: " + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(err => console.error("Error deleting group:", err))
+      .finally(() => {
+        setDeleteGroupConfirmation({ show: false, group: null });
+      });
+  };
 
   const [newUser, setNewUser] = useState<NewUserForm>({
     name: '',
@@ -174,17 +198,9 @@ function ManageUsersMain() {
           <GroupList
             groups={groups}
             onDeleteGroup={(id) => {
-              if (window.confirm("Are you sure you want to delete this group? This cannot be undone.")) {
-                fetch(`${API_BASE_URL}/chats/groups/${id}`, { method: 'DELETE' })
-                  .then(res => res.json())
-                  .then(data => {
-                    if (data.success) {
-                      fetch(`${API_BASE_URL}/chats/groups/all`).then(r => r.json()).then(setGroups);
-                    } else {
-                      alert("Failed to delete group: " + (data.error || 'Unknown error'));
-                    }
-                  })
-                  .catch(err => console.error("Error deleting group:", err));
+              const groupToDelete = groups.find(g => g.group_id === id);
+              if (groupToDelete) {
+                setDeleteGroupConfirmation({ show: true, group: groupToDelete });
               }
             }}
             onEditGroup={(group) => {
@@ -284,6 +300,60 @@ function ManageUsersMain() {
           onClose={() => setIsGroupViewModalOpen(false)}
           group={selectedGroup}
         />
+      )}
+
+      {deleteGroupConfirmation.show && deleteGroupConfirmation.group && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center justify-center mb-4">
+              <div className="p-3 rounded-full bg-red-100">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+
+            <h3 className="text-xl font-semibold text-center text-gray-900 mb-2">
+              Confirm Deletion
+            </h3>
+
+            <div className="text-center mb-4">
+              <p className="text-gray-700">
+                Are you sure you want to delete group:
+              </p>
+              <p className="font-semibold text-lg mt-1">
+                {deleteGroupConfirmation.group.group_name}
+              </p>
+            </div>
+
+            <div className="bg-red-50 rounded-lg p-4 mb-6">
+              <h4 className="font-medium text-red-800 mb-2">⚠️ WARNING: This action cannot be undone</h4>
+              <p className="text-sm text-red-700">
+                This will permanently delete this group and ALL associated data:
+              </p>
+              <ul className="list-disc list-inside text-sm text-red-700 mt-2 pl-2">
+                <li>Group details</li>
+                <li>All group memberships</li>
+                <li>All group messages</li>
+                <li>Message read status</li>
+                <li>Task associations (will be unassigned)</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setDeleteGroupConfirmation({ show: false, group: null })}
+                className="px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteGroup}
+                className="px-5 py-2.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center justify-center"
+              >
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

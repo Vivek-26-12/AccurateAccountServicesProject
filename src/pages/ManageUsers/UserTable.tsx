@@ -270,7 +270,7 @@ export const UserTable = ({ currentTab, searchTerm }: { currentTab?: 'users' | '
                   ? `${(entity as User).first_name || 'Unknown'} ${(entity as User).last_name || ''}`
                   : (entity as Client).company_name || 'Unknown Company'}
               </div>
-              <div className="text-sm text-gray-500">ID: {id}</div>
+
             </div>
           </div>
         </td>

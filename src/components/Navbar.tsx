@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../Data/AuthData';
 import LoginPopup from "./LoginPopup";
@@ -13,7 +13,7 @@ const defaultProfilePic = "https://img.freepik.com/premium-vector/avatar-profile
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, login, logout, fetchUserData } = useAuth();
+  const { user } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isClientDocOpen, setIsClientDocOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -21,13 +21,6 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      login(JSON.parse(storedUser));
-    } else {
-      fetchUserData();
-    }
-
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
@@ -65,7 +58,7 @@ export default function Navbar() {
 
   const links = navLinks[userRole] || navLinks.guest;
 
-  const handleLinkClick = (link) => {
+  const handleLinkClick = (link: { label: string; path: string }) => {
     if (userRole === 'client' && link.label === 'Documents') {
       setIsClientDocOpen(true);
     } else {

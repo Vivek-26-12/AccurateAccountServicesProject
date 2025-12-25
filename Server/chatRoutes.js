@@ -357,13 +357,13 @@ module.exports = (db, io) => {
       db.query("DELETE FROM GroupChatMembers WHERE group_id = ?", [group_id], (err) => {
         if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting members" }));
 
-        // 2. Delete messages
-        db.query("DELETE FROM GroupChatMessages WHERE group_id = ?", [group_id], (err) => {
-          if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting messages" }));
+        // 2. Delete unseen records
+        db.query("DELETE FROM GroupChatMessageSeen WHERE group_id = ?", [group_id], (err) => {
+          if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting seen records" }));
 
-          // 3. Delete unseen records
-          db.query("DELETE FROM GroupChatMessageSeen WHERE group_id = ?", [group_id], (err) => {
-            if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting seen records" }));
+          // 3. Delete messages
+          db.query("DELETE FROM GroupChatMessages WHERE group_id = ?", [group_id], (err) => {
+            if (err) return db.rollback(() => res.status(500).json({ error: "Error deleting messages" }));
 
             // 4. Update Tasks (set group_id to null)
             db.query("UPDATE Tasks SET group_id = NULL WHERE group_id = ?", [group_id], (err) => {
