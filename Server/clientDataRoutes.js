@@ -91,28 +91,22 @@ module.exports = (db) => {
 
 
         // Process important documents - assign to folders if they have folder_id
-        client.importantDocuments.forEach(doc => {
+        (client.importantDocuments || []).forEach(doc => {
           if (doc.folder_id) {
             const folder = response.folders.find(f => f.folder_id === doc.folder_id);
             if (folder) {
               folder.importantDocuments.push(doc);
             }
-          } else {
-            // Keep in root importantDocuments if no folder_id
-            response.importantDocuments.push(doc);
           }
         });
 
         // Process other documents - assign to folders if they have folder_id
-        client.otherDocuments.forEach(doc => {
+        (client.otherDocuments || []).forEach(doc => {
           if (doc.folder_id) {
             const folder = response.folders.find(f => f.folder_id === doc.folder_id);
             if (folder) {
               folder.otherDocuments.push(doc);
             }
-          } else {
-            // Keep in root otherDocuments if no folder_id
-            response.otherDocuments.push(doc);
           }
         });
 
